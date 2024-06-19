@@ -18,19 +18,23 @@ from numpy import where, append, empty, array
 
 # NEED: functions to create empty/sample diagrams from each type, check each diagram type, convert types to DataFrame
 def check_diagram(D):
-    '''
-    '''
+    '''Verify that the values in a diagram are good'''
     # make sure that birth values are <= death values
-    pers = D[:,1] - D[:,0]
-    if len(where(pers < 0)) > 0:
+    # if D has one entry
+    if len(D.shape) != 1:
+        pers = D[:,1] - D[:,0]
+        birth = D[:,0]
+    else:
+        pers = D[1] - D[0]
+        birth = D[0]
+    if where(pers < 0)[0].shape[0] > 0:
         raise Exception('Birth values have to be <= death values.')
     # make sure that birth values are >= 0
-    if len(where(D[:,0] < 0)) > 0:
+    if where(birth < 0)[0].shape[0] > 0:
         raise Exception('Birth values have to be non-negative.')
 
 def preprocess_diagram(D, ret = False):
-    '''
-    '''
+    '''Conversion of diagrams'''
     error_message = 'Diagrams must be computed from either the ripser, gph, flagser, gudhi or cechmat libraries.'
     # first check if the diagram is from ripser, gph or flagser
     if isinstance(D, dict):
@@ -38,7 +42,7 @@ def preprocess_diagram(D, ret = False):
             raise Exception(error_message)
         if isinstance(D['dgms'],list) == False:
             raise Exception(error_message)
-        if set([type(x) for x in D['dgms']]) != set(['ndarray']):
+        if set([type(x) for x in D['dgms']]) != set([type(array([0,1]))]):
             raise Exception(error_message)
         if set([x.shape[1] for x in D['dgms']]) != set([2]):
             raise Exception(error_message)
@@ -49,25 +53,26 @@ def preprocess_diagram(D, ret = False):
             return D
     # now check if diagram is from cechmate or gudhi
     if isinstance(D, list):
-        if set([type(x) for x in D]) == set(['tuple']):
+        if set([type(x) for x in D]) == set([type((1,2))]):
             if set([len(x) for x in D]) != set([2]):
                 raise Exception(error_message)
             if set([len(x[1]) for x in D]) != set([2]):
                 raise Exception(error_message)
             dims = [x[0] for x in D]
-            if len(dims < 0) > 0:
+            if any(e < 0 for e in dims):
                 raise Exception(error_message)
-            if set([type(d) for d in dims]) != set(['int']):
+            if set([type(d) for d in dims]) != set([type(1)]):
                 raise Exception(error_message)
             # convert to list of numpy arrays
             if ret == True:
                 max_dim = max(dims)
-                res = [empty((0, 2)) for i in range(max_dim + 1)]
+                res = [array([0,0]).reshape((1,2)) for i in range(max_dim + 1)]
                 for pt in D:
-                    append(res[pt[0]], array([pt[1][0], pt[1][1]]))
+                    res[pt[0]] = append(res[pt[0]], array([pt[1][0], pt[1][1]]).reshape((1,2)),axis = 0)
+                res = [r[range(1,len(r)),:] for r in res]
                 lst = [check_diagram(d) for d in res]
                 return res
-        elif set([type(x) for x in D]) == set(['ndarray']):
+        elif set([type(x) for x in D]) == set([type(array([0,1]))]):
             if set([x.shape[1] for x in D]) != set([2]):
                 raise Exception(error_message)
             # no need to convert as this is the base format
