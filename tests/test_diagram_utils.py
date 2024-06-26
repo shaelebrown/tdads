@@ -36,31 +36,61 @@ def test_preprocess_diagram():
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram(1)
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram(1,ret=True)
+    with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram('1')
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram('1',ret=True)
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram({'a':1})
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'a':1},ret=True)
+    with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram({'dgms':1})
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':1},ret=True)
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram({'dgms':[1,2]})
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':[1,2]},ret=True)
+    with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram({'dgms':[array([1,2,3,4])]})
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':[array([1,2,3,4])]},ret=True)
+    with pytest.raises(Exception, match = 'have to be'):
         preprocess_diagram({'dgms':[array([-1,2,3,4]).reshape((2,2))]})
+    with pytest.raises(Exception, match = 'have to be'):
+        preprocess_diagram({'dgms':[array([-1,2,3,4]).reshape((2,2))]},ret=True)
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([1,2])
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([1,2],ret=True)
+    with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram(array([1,2]))
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram(array([1,2]),ret=True)
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([array([1,2,3,4])])
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([array([1,2,3,4])],ret=True)
+    with pytest.raises(Exception, match = 'have to'):
         preprocess_diagram([array([-1,2,3,4]).reshape((2,2))])
+    with pytest.raises(Exception, match = 'have to'):
+        preprocess_diagram([array([-1,2,3,4]).reshape((2,2))],ret=True)
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,2),(1)])
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,2),(1)],ret=True)
+    with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,2),(1,2)])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,2),(1,2)],ret=True)
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,(0,1)),(-1,(0,1))])
     with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,(0,1)),(-1,(0,1))],ret=True)
+    with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,(0,1)),(0.5,(0,1))],ret=True)
     

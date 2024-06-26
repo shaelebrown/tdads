@@ -42,17 +42,22 @@ def preprocess_diagram(D, ret = False):
             raise Exception(error_message)
         if set([type(x) for x in D['dgms']]) != set([type(array([0,1]))]):
             raise Exception(error_message)
+        if set([len(x.shape) for x in D['dgms']]) != set([2]):
+            raise Exception(error_message)
         if set([x.shape[1] for x in D['dgms']]) != set([2]):
             raise Exception(error_message)
+        # convert to list of numpy arrays
+        D = D['dgms']
+        # perform final numeric diagram checks
+        lst = [check_diagram(d) for d in D]
         if ret == True:
-            # convert to list of numpy arrays
-            D = D['dgms']
-            lst = [check_diagram(d) for d in D]
             return D
     # now check if diagram is from cechmate or gudhi
-    if isinstance(D, list):
+    elif isinstance(D, list):
         if set([type(x) for x in D]) == set([type((1,2))]):
             if set([len(x) for x in D]) != set([2]):
+                raise Exception(error_message)
+            if set([type(x[1]) for x in D]) != set([type((1,2))]):
                 raise Exception(error_message)
             if set([len(x[1]) for x in D]) != set([2]):
                 raise Exception(error_message)
@@ -62,24 +67,27 @@ def preprocess_diagram(D, ret = False):
             if set([type(d) for d in dims]) != set([type(1)]):
                 raise Exception(error_message)
             # convert to list of numpy arrays
+            max_dim = max(dims)
+            res = [array([0,0]).reshape((1,2)) for i in range(max_dim + 1)]
+            for pt in D:
+                res[pt[0]] = append(res[pt[0]], array([pt[1][0], pt[1][1]]).reshape((1,2)),axis = 0)
+            res = [r[range(1,len(r)),:] for r in res]
+            lst = [check_diagram(d) for d in res]
             if ret == True:
-                max_dim = max(dims)
-                res = [array([0,0]).reshape((1,2)) for i in range(max_dim + 1)]
-                for pt in D:
-                    res[pt[0]] = append(res[pt[0]], array([pt[1][0], pt[1][1]]).reshape((1,2)),axis = 0)
-                res = [r[range(1,len(r)),:] for r in res]
-                lst = [check_diagram(d) for d in res]
                 return res
         elif set([type(x) for x in D]) == set([type(array([0,1]))]):
+            if set([len(x.shape) for x in D]) != set([2]):
+                raise Exception(error_message)
             if set([x.shape[1] for x in D]) != set([2]):
                 raise Exception(error_message)
             # no need to convert as this is the base format
+            # final numeric diagram checks
+            lst = [check_diagram(d) for d in D]
             if ret == True:
-                lst = [check_diagram(d) for d in D]
                 return D
         else:
             raise Exception(error_message)
-    if ret == True or (not isinstance(D,list) and not isinstance(D,dict)):
+    else:
         raise Exception(error_message)
 
     
