@@ -1,17 +1,4 @@
 
-# activate venv/bin/activate
-# pip install --editable .
-
-# TDA modules
-# cechmate # not working currently, list of numpy arrays with 2 columns
-# gudhi # list of (dim, (birth, death))
-# dionysus # not working currently, complicado
-# ripser # dict with keys dgms, cocyles, num_edges, dperm2all, idx_perm, r_cover.
-# dgms[i] gives the diagram of dimenion i is the numpy array of birth death pairs
-# gph # same but with keys dgms and gens
-# flagser # same with keys dgms, betti, cell_count, euler.
-# phat # doesn't seem to save feature dimensions... let's avoid for now
-
 from numpy import where, append, empty, array
 
 # functions to check persistence diagrams and convert diagrams between formats
