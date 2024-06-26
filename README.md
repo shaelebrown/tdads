@@ -14,6 +14,8 @@ $ pip install tdads
 
 ## API
 
+FIX FUNCTION NAMES
+
 `tdads` has two major modules:
 
 1.  Machine learning. The functions `diagram_mds`, `diagram_kpca` and

@@ -8,7 +8,26 @@ from math import pi
 
 # add in extra parameter for n_cores in distance constructor
 class distance:
-    def __init__(self, dim = 0,metric='W',p=2, sigma=None, n_cores=1):
+    def __init__(self, dim:int = 0,metric='W',p:float=2, sigma:float=None, n_cores:int=1):
+        '''Create a distance object.
+        
+        Available distance metrics are the wasserstein, bottleneck and Fisher information metric distances.
+
+        Parameters
+        ----------
+        `dim` : int
+            The non-negative homological dimension in which distances will be computed (default 0).
+        `metric` : str
+            One of \"W\" (default) or \"FIM\" for the wasserstein/bottleneck and Fisher information metric
+            functions respectively.
+        `p` : float
+            The power parameter for the wasserstein metric, must be at least 1 (default 2).
+        `sigma` : float
+            The scale parameter for the Fisher information metric, default None but must be supplied when
+            `metric` is \"FIM\".
+        `n_cores` : int
+            The number of CPU cores to use for parallel computation of distance matrices.
+        '''
         if not isinstance(dim,type(2)):
             raise Exception('dim must be an integer.')
         if dim < 0:
@@ -48,8 +67,21 @@ class distance:
             else:
                 M = str(self.p) + '-wasserstein distance.'
         return M
-    def compute(self,D1,D2):
-        '''Compute a single distance value.'''
+    def compute(self,D1,D2) -> float:
+        '''Compute the distance between two persistence diagrams.
+
+        Parameters
+        ----------
+        `D1` : any
+            The first persistence diagram (computed from either the ripser, gph, flagser, gudhi or cechmate packages).
+        `D2` : any
+            The second persistence diagram (\"\").
+        
+        Returns
+        -------
+        float
+            The numeric distance calculation value.
+        '''
         # preprocess diagrams
         D1 = preprocess_diagram(D1, ret=True)
         D2 = preprocess_diagram(D2, ret=True)

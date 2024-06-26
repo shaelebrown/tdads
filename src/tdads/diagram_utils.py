@@ -3,7 +3,19 @@ from numpy import where, append, empty, array
 
 # functions to check persistence diagrams and convert diagrams between formats
 def check_diagram(D):
-    '''Verify that the values in a diagram are good'''
+    '''Checks for persistence diagrams.
+    
+    Internal method to verify that birth values are non-negative and less than death values.
+
+    Parameters
+    ----------
+    `D` : numpy.ndarray
+        The input diagram to be checked.
+    
+    Returns
+    -------
+    None
+    '''
     # make sure that birth values are <= death values
     # if D has one entry
     if len(D.shape) != 1:
@@ -19,7 +31,23 @@ def check_diagram(D):
         raise Exception('Birth values have to be non-negative.')
 
 def preprocess_diagram(D, ret = False):
-    '''Conversion of diagrams'''
+    '''Verify the format of a persistence diagram and convert to a standard format.
+    
+    This function can verify a persistence diagram from the ripser, gph, flagser, gudhi or cechmate packages 
+    and convert any such diagram into a list of numpy arrays if desired (largely an internal functionality).
+    
+    Parameters
+    ----------
+    `D` : any
+        The persistence diagram to be verified. An exception will be raised if `D` is not a persistence
+        diagram computed from one of the aforementioned packages.
+    
+    Returns
+    -------
+    None or list of numpy.ndarray
+        If `ret` is `True` and the diagram is verified then a list is returned. The i-th element of 
+        the returned list is the array of i-dimensional topological features in the diagram.
+    '''
     error_message = 'Diagrams must be computed from either the ripser, gph, flagser, gudhi or cechmat libraries.'
     # first check if the diagram is from ripser, gph or flagser
     if isinstance(D, dict):
