@@ -15,8 +15,6 @@
 from numpy import where, append, empty, array
 
 # functions to check persistence diagrams and convert diagrams between formats
-
-# NEED: functions to create empty/sample diagrams from each type, check each diagram type, convert types to DataFrame
 def check_diagram(D):
     '''Verify that the values in a diagram are good'''
     # make sure that birth values are <= death values
@@ -38,9 +36,9 @@ def preprocess_diagram(D, ret = False):
     error_message = 'Diagrams must be computed from either the ripser, gph, flagser, gudhi or cechmat libraries.'
     # first check if the diagram is from ripser, gph or flagser
     if isinstance(D, dict):
-        if 'dgms' in D.keys() == False:
+        if not 'dgms' in D.keys():
             raise Exception(error_message)
-        if isinstance(D['dgms'],list) == False:
+        if not isinstance(D['dgms'],list):
             raise Exception(error_message)
         if set([type(x) for x in D['dgms']]) != set([type(array([0,1]))]):
             raise Exception(error_message)
@@ -81,6 +79,8 @@ def preprocess_diagram(D, ret = False):
                 return D
         else:
             raise Exception(error_message)
+    if ret == True or (not isinstance(D,list) and not isinstance(D,dict)):
+        raise Exception(error_message)
 
     
             

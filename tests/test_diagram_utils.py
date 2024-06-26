@@ -1,7 +1,7 @@
 
 # test file for diagram_utils
 import pytest
-from tdads.diagram_utils import check_diagram, preprocess_diagram
+from tdads.diagram_utils import *
 from numpy import array, inf, equal
 from numpy.random import random
 from ripser import ripser
@@ -33,5 +33,34 @@ def test_preprocess_diagram():
     res = preprocess_diagram(diagrams, ret = True)
     for i in range(len(res)):
         assert equal(diagrams['dgms'][i],res[i]).prod() == 1, 'Can\'t handle ripser diags.'
-    # to do: check for errors
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram(1)
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram('1')
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'a':1})
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':1})
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':[1,2]})
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':[array([1,2,3,4])]})
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram({'dgms':[array([-1,2,3,4]).reshape((2,2))]})
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([1,2])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram(array([1,2]))
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([array([1,2,3,4])])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([array([-1,2,3,4]).reshape((2,2))])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,2),(1)])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,2),(1,2)])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,(0,1)),(-1,(0,1))])
+    with pytest.raises(Exception, match = 'must be'):
+        preprocess_diagram([(1,(0,1)),(0.5,(0,1))])
     
