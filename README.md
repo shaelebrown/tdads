@@ -1,9 +1,6 @@
 # tdads
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![CRAN version](http://www.r-pkg.org/badges/version/TDApplied)](https://CRAN.R-project.org/package=TDApplied)
-[![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/TDApplied)](https://CRAN.R-project.org/package=TDApplied)
-
 [![JOSS DOI](https://joss.theoj.org/papers/10.21105/joss.06321/status.svg)](https://doi.org/10.21105/joss.06321)
 [![Zenodo DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10814141.svg)](https://doi.org/10.5281/zenodo.10814141)
 
