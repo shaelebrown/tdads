@@ -5,10 +5,12 @@ from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 from numpy import concatenate, array, logical_or, exp, sqrt, arccos
 from math import pi
+from multiprocessing import Pool, cpu_count
+from itertools import product
 
 # add in extra parameter for n_cores in distance constructor
 class distance:
-    def __init__(self, dim:int = 0,metric='W',p:float=2, sigma:float=None, n_cores:int=1):
+    def __init__(self, dim:int = 0,metric='W',p:float=2, sigma:float=None, n_cores:int=cpu_count() - 1):
         '''Create a distance object.
         
         Available distance metrics are the wasserstein, bottleneck and Fisher information metric distances.
@@ -26,7 +28,8 @@ class distance:
             The scale parameter for the Fisher information metric, default None but must be supplied when
             `metric` is \"FIM\".
         `n_cores` : int
-            The number of CPU cores to use for parallel computation of distance matrices.
+            The number of CPU cores to use for parallel computation of distance matrices. Default is the
+            number of available cores minus 1.
         '''
         if not isinstance(dim,type(2)):
             raise Exception('dim must be an integer.')
@@ -56,6 +59,8 @@ class distance:
             raise Exception('n_cores must be an integer.')
         if n_cores < 0:
             raise Exception('n_cores must be non-negative.')
+        if n_cores > cpu_count():
+            raise Exception('n_cores must be at most the number of available cores.')
         # then check if n_cores is more than the number of available cores
         self.n_cores = n_cores
     def __str__(self):
@@ -180,6 +185,63 @@ class distance:
             if norm < -1:
                 norm = -1
             return arccos(norm)
+    def compute_matrix(self, diagrams:list, other_diagrams:list=None):
+        '''Compute a distance matrix between one or two lists of persistence diagrams.
+        Parameters
+        ----------
+        `diagrams` : list
+            The first first of persistence diagram (computed from either the ripser, gph, flagser, gudhi or cechmate packages).
+        `other_diagrams` : any
+            The optional second list of persistence diagram for computing a cross-distance matrix. Default `None`.
+        
+        Returns
+        -------
+        numpy.ndarray
+            The (cross) distance matrix.
+
+        Examples
+        --------
+        >>> from tdads import distance
+        >>> from ripser import ripser
+        >>> import numpy as np
+        >>> # create 2 datasets
+        >>> data1 = np.random((100,2))
+        >>> data2 = np.random((100,2))
+        >>> compute persistence diagrams with ripser
+        >>> diagram1 = ripser(data1)
+        >>> diagram2 = ripser(data2)
+        >>> # create distance object
+        >>> d_wass = distance() # 2-wasserstein distance
+        >>> # compute distance matrix
+        >>> d_wass.compute_matrix([diagram1, diagram2])
+        >>> # this is the same as:
+        >>> d_wass.compute_matrix([diagram1, diagram2], [diagram1, diagram2])
+        '''
+        # first check the lists of diagrams
+        # then create a joint list of pairs of diagrams for parallel processing
+        if isinstance(diagrams,type([1,2])) == False:
+            raise Exception('diagrams must be a list.')
+        if len(diagrams) == 0:
+            raise Exception('diagrams list must not be empty.')
+        diagrams = [preprocess_diagram(d, ret = True) for d in diagrams]
+        if other_diagrams != None:
+            if isinstance(other_diagrams, type([1,2])) == False:
+                raise Exception('If supplied, other_diagrams must be a list.')
+            if len(other_diagrams) == 0:
+                raise Exception('If supplied, other_diagrams list must not be empty.')
+            other_diagrams = [preprocess_diagram(d, ret = True) for d in other_diagrams]
+            diagram_product = product(diagrams, other_diagrams)
+            joint_shape = (len(diagrams), len(other_diagrams))
+        else:
+            diagram_product = product(diagrams, diagrams)
+            joint_shape = (len(diagrams), len(diagrams))
+        # create a pool process and compute distances in parallel
+        with Pool(processes=self.n_cores) as pool:
+            result = pool.starmap(self.compute, diagram_product)
+        # store result in numpy array
+        return array(result).reshape(joint_shape)
+        
+        
 
         
         

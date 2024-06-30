@@ -32,6 +32,8 @@ def test_distance_class():
         dist = distance(n_cores=1.1)
     with pytest.raises(Exception, match = 'n_cores'):
         dist = distance(n_cores=-1)
+    with pytest.raises(Exception, match = 'n_cores'):
+        dist = distance(n_cores=10000)
     dist = distance()
     assert dist.__str__() == '2-wasserstein distance.'
     dist = distance(metric = 'FIM', sigma = 2)
@@ -86,3 +88,18 @@ def test_distance_calculations():
     assert dist_FIM1.compute(D1,D3) == pytest.approx(0.08821907, abs=1e-4)
     assert dist_FIM1.compute(D3,D2) == pytest.approx(0.08741134, abs=1e-4)
 
+def test_distance_matrices():
+    '''For distance matrix calculations of all three types.
+    Including cross-distance matrix calculations.'''
+    D1 = [array([2,3]).reshape((1,2))]
+    D2 = [array([[2,3.1],[5,6]])]
+    D3 = [array([2,3.1]).reshape((1,2))]
+    dist_w2 = distance(n_cores=2)
+    dist_w3 = distance(n_cores=3)
+    dist_FIM1 = distance(metric = 'FIM', sigma = 1, n_cores = 2)
+    m1 = array([[0,dist_w2.compute(D1 = D1, D2 = D2)],[dist_w2.compute(D1 = D2, D2 = D1),0]])
+    m2 = array([[0,dist_w3.compute(D1 = D1, D2 = D2),dist_w3.compute(D1 = D1, D2 = D3)],[dist_w3.compute(D1 = D2, D2 = D1),0,dist_w3.compute(D1 = D2, D2 = D3)],[dist_w3.compute(D1 = D3, D2 = D1),dist_w3.compute(D1 = D3, D2 = D2),0]])
+    m3 = array([[0,dist_FIM1.compute(D1 = D1, D2 = D3)],[dist_FIM1.compute(D1 = D2, D2 = D1),dist_FIM1.compute(D1 = D2, D2 = D3)]])
+    assert (dist_w2.compute_matrix([D1, D2]) == m1).all()
+    assert (dist_w3.compute_matrix([D1, D2, D3]) == m2).all()
+    assert (dist_FIM1.compute_matrix([D1, D2], [D1, D3]) == m3).all()
