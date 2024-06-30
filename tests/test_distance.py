@@ -1,11 +1,9 @@
 
-# test file for diagram_utils
+# test file for distance
 import pytest
 from tdads.distance import *
 from numpy import array, inf, equal
 from numpy.random import random
-from ripser import ripser
-import gudhi
 from math import sqrt
 
 def test_distance_class():

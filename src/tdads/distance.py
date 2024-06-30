@@ -81,6 +81,30 @@ class distance:
         -------
         float
             The numeric distance calculation value.
+
+        Examples
+        --------
+        >>> from tdads import distance
+        >>> from ripser import ripser
+        >>> import numpy as np
+        >>> # create 2 datasets
+        >>> data1 = np.random((100,2))
+        >>> data2 = np.random((100,2))
+        >>> compute persistence diagrams with ripser
+        >>> diagram1 = ripser(data1)
+        >>> diagram2 = ripser(data2)
+        >>> # create distance object
+        >>> d_wass = distance() # 2-wasserstein distance
+        >>> # compute distance
+        >>> d_wass.compute(diagram1, diagrams2)
+
+        Citations
+        ---------
+        Kerber M, Morozov D and Nigmetov A (2017). "Geometry Helps to Compare Persistence Diagrams." https://dl.acm.org/doi/10.1145/3064175.
+        
+        Le T, Yamada M (2018). "Persistence fisher kernel: a riemannian manifold kernel for persistence diagrams." https://proceedings.neurips.cc/paper/2018/file/959ab9a0695c467e7caf75431a872e5c-Paper.pdf.
+        
+        Vlad I. Morariu, Balaji Vasan Srinivasan, Vikas C. Raykar, Ramani Duraiswami, and Larry S. Davis. Automatic online tuning for fast Gaussian summation. Advances in Neural Information Processing Systems (NIPS), 2008.
         '''
         # preprocess diagrams
         D1 = preprocess_diagram(D1, ret=True)
