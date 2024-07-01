@@ -103,3 +103,5 @@ def test_distance_matrices():
     assert (dist_w2.compute_matrix([D1, D2]) == m1).all()
     assert (dist_w3.compute_matrix([D1, D2, D3]) == m2).all()
     assert (dist_FIM1.compute_matrix([D1, D2], [D1, D3]) == m3).all()
+    with pytest.raises(Exception, match = 'Diagrams must be computed from either the ripser, gph, flagser, gudhi or cechmat libraries.'):
+        dist_w2.compute_matrix([D1, 1])
