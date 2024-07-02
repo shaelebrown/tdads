@@ -55,7 +55,7 @@ class kernel:
         >>> # create 2 datasets
         >>> data1 = np.random((100,2))
         >>> data2 = np.random((100,2))
-        >>> compute persistence diagrams with ripser
+        >>> # compute persistence diagrams with ripser
         >>> diagram1 = ripser(data1)
         >>> diagram2 = ripser(data2)
         >>> # create kernel object
@@ -91,7 +91,7 @@ class kernel:
         >>> # create 2 datasets
         >>> data1 = np.random((100,2))
         >>> data2 = np.random((100,2))
-        >>> compute persistence diagrams with ripser
+        >>> # compute persistence diagrams with ripser
         >>> diagram1 = ripser(data1)
         >>> diagram2 = ripser(data2)
         >>> # create kernel object
