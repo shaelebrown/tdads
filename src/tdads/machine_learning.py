@@ -5,6 +5,7 @@ from tdads.kernel import *
 from multiprocessing import cpu_count
 from sklearn.manifold import MDS
 from sklearn.decomposition import KernelPCA
+from sklearn.svm import SVC, SVR
 
 # multidimensional scaling
 class diagram_mds:
@@ -33,7 +34,6 @@ class diagram_mds:
         `n_cores` : int
             The number of CPU cores to use for parallel computation of distance matrices. Default is the
             number of available cores minus 1.
-        
         '''
         self.distance = distance(dim = dim, metric = metric, p = p, sigma = sigma, n_cores = n_cores)
         self.MDS = MDS(n_components = n_components, metric = False, n_jobs = n_cores, random_state = random_state, dissimilarity = 'precomputed')
@@ -57,6 +57,27 @@ class diagram_mds:
         -------
         `X_new` : ndarray of shape `(n_diagrams, n_components)`
             `X` transformed in the new space.
+
+        Examples
+        --------
+        >>> from tdads.machine_learning import diagram_mds
+        >>> from tdads.distance import distance
+        >>> from ripser import ripser
+        >>> import numpy as np
+        >>> # create 2 datasets
+        >>> data1 = np.random((100,2))
+        >>> data2 = np.random((100,2))
+        >>> # compute persistence diagrams with ripser
+        >>> diagram1 = ripser(data1)
+        >>> diagram2 = ripser(data2)
+        >>> # project into 2D with the 2-wasserstein distance
+        >>> mds = diagram_mds()
+        >>> mds.fit_transform([D1, D2])
+        >>> # can also fit with a precomputed distance matrix
+        >>> d_wass = distance()
+        >>> dist_mat = d_wass.compute_matrix([D1, D2])
+        >>> mds_precomp = diagram_mds(precomputed = True)
+        >>> mds_precomp.fit_transform(dist_mat)
         '''
         if self.precomputed == False:
             if isinstance(X, type(array([0,1]))):
@@ -123,6 +144,27 @@ class diagram_kpca:
         -------
         `self` : object
             Returns the instance itself.
+
+        Examples
+        --------
+        >>> from tdads.machine_learning import diagram_mds
+        >>> from tdads.kernel import kernel
+        >>> from ripser import ripser
+        >>> import numpy as np
+        >>> # create 2 datasets
+        >>> data1 = np.random((100,2))
+        >>> data2 = np.random((100,2))
+        >>> # compute persistence diagrams with ripser
+        >>> diagram1 = ripser(data1)
+        >>> diagram2 = ripser(data2)
+        >>> # fit model with the persistence Fisher kernel (sigma = t = 1)
+        >>> kpca = diagram_kpca()
+        >>> kpca_fitted = kpca.fit([D1, D2])
+        >>> # can also fit with a precomputed distance matrix
+        >>> pfk = kernel()
+        >>> gram_mat = pfk.compute_matrix([D1, D2])
+        >>> kpca_precomp = diagram_kpca(precomputed = True)
+        >>> kpca_precomp_fitted = kpca_precomp.fit(gram_mat)
         '''
         if self.precomputed == False:
             if isinstance(X, type(array([0,1]))):
@@ -148,6 +190,33 @@ class diagram_kpca:
         `X_new` : ndarray
             The embedding of the new persistence diagrams.
         
+        Examples
+        --------
+        >>> from tdads.machine_learning import diagram_mds
+        >>> from tdads.kernel import kernel
+        >>> from ripser import ripser
+        >>> import numpy as np
+        >>> # create 2 datasets
+        >>> data1 = np.random((100,2))
+        >>> data2 = np.random((100,2))
+        >>> # compute persistence diagrams with ripser
+        >>> diagram1 = ripser(data1)
+        >>> diagram2 = ripser(data2)
+        >>> # fit models (regular and precomputed) with the 
+        >>> # persistence Fisher kernel (sigma = t = 1)
+        >>> kpca = diagram_kpca()
+        >>> kpca_fitted = kpca.fit([D1, D2]) # or
+        >>> pfk = kernel()
+        >>> gram_mat = pfk.compute_matrix([D1, D2])
+        >>> kpca_precomp = diagram_kpca(precomputed = True)
+        >>> kpca_precomp_fitted = kpca_precomp.fit(gram_mat)
+        >>> # create 2 new datasets
+        >>> data3 = np.random((100,2))
+        >>> data4 = np.random((100,2))
+        >>> # project new data into 2D space
+        >>> kpca_fitted.transform([D3, D4]) # or
+        >>> cross_gram = pfk.compute_matrix([D1, D2], [D3, D4])
+        >>> kpca_precomputed_fitted.transform([D3, D4])
         '''
         if self.precomputed == False:
             X = self.kernel.compute_matrix(X, self.diagrams)
@@ -166,8 +235,68 @@ class diagram_kpca:
         -------
         `X_new` : ndarray
             `X` transformed in the new space.
+        
+        Examples
+        --------
+        >>> from tdads.machine_learning import diagram_mds
+        >>> from tdads.kernel import kernel
+        >>> from ripser import ripser
+        >>> import numpy as np
+        >>> # create 2 datasets
+        >>> data1 = np.random((100,2))
+        >>> data2 = np.random((100,2))
+        >>> # compute persistence diagrams with ripser
+        >>> diagram1 = ripser(data1)
+        >>> diagram2 = ripser(data2)
+        >>> # fit models (regular and precomputed) with the 
+        >>> # persistence Fisher kernel (sigma = t = 1) and
+        >>> # project into 2D space
+        >>> kpca = diagram_kpca()
+        >>> kpca.fit_transform([D1, D2]) # or
+        >>> pfk = kernel()
+        >>> gram_mat = pfk.compute_matrix([D1, D2])
+        >>> kpca_precomp = diagram_kpca(precomputed = True)
+        >>> kpca_precomp.fit_transform(gram_mat)
         '''
         self = self.fit(X, y)
         X_new = self.transform(X)
         return X_new
+
+def diagram_svm():
+    def __init__(self, cv:int = 1, dims:list = [0], sigmas:list = [1.0], ts:list = [1.0], precomputed:bool = False, C:float = 1.0, epsilon:float = 1.0, random_state:int = None):
+        if epsilon != None:
+            self.SVM = SVC(C = C, random_state = random_state)
+        else:
+            self.SVM = SVR(C = C, epsilon = epsilon)
+        if isinstance(precomputed, type(True)) == False:
+            raise Exception('precomputed must be True or False.')
+        self.precomputed = precomputed
+        if isinstance(cv, 1) == False:
+            raise Exception('cv must be an integer.')
+        if cv < 1:
+            raise Exception('cv must be at least 1.')
+        if not isinstance(dim,type(2)):
+            raise Exception('dim must be an integer.')
+        self.cv = cv
+        if set([type(d) for d in dims]) != set(type(1)):
+            raise Exception('Each dimension in dims must be an integer.')
+        if min(dims) < 0:
+            raise Exception('Each dimension in dims must be non-negative.')
+        self.dims = dims
+        if set([type(d) for d in dims]) != set(type(1)):
+            raise Exception('Each dimension in dims must be an integer.')
+        if min(dims) < 0:
+            raise Exception('Each dimension in dims must be non-negative.')
+        self.dims = dims
+        if set([type(s) for s in sigmas]) != set([type(1), type(1.0)]):
+                raise Exception('Each sigma value must be a number.')
+        if min(sigmas) <= 0:
+                raise Exception('Each sigma value must be positive.')
+        self.sigmas = sigmas
+        if set([type(t) for t in ts]) != set([type(1), type(1.0)]):
+                raise Exception('Each t value must be a number.')
+        if min(ts) <= 0:
+                raise Exception('Each t value must be positive.')
+        self.ts = ts
+        
 
