@@ -48,15 +48,15 @@ class diagram_mds:
         
         Parameters
         ----------
-        X : ndarray or list
-            Either a precomputed distance matrix of persistence diagrams (if `precomputed` was set to `True`) or a list of persistence diagrams (otherwise).
-        y : Ignored
+        `X` : {array-like of shape `(n_diagrams, n_diagrams)`} or {list of length `n_diagrams`}
+            Either a precomputed distance matrix of `n_diagrams` many persistence diagrams (if `precomputed` was set to `True`) or a list of `n_diagrams` many persistence diagrams (otherwise).
+        `y` : Ignored
             Not used, present for API consistency by convention.
 
         Returns
         -------
-        X_new : ndarray
-            X transformed in the new space.
+        `X_new` : ndarray of shape `(n_diagrams, n_components)`
+            `X` transformed in the new space.
         '''
         if self.precomputed == False:
             if isinstance(X, type(array([0,1]))):
@@ -114,14 +114,14 @@ class diagram_kpca:
         
         Parameters
         ----------
-        X : ndarray or list
-            Either a precomputed distance matrix of persistence diagrams (if `precomputed` was set to `True`) or a list of persistence diagrams (otherwise).
-        y : Ignored
+        `X` : {array-like of shape `(n_diagrams, n_diagrams)`} or {list of length `n_diagrams`}
+            Either a precomputed Gram matrix of `n_diagrams` many persistence diagrams (if `precomputed` was set to `True`) or a list of `n_diagrams` many persistence diagrams (otherwise).
+        `y` : Ignored
             Not used, present for API consistency by convention.
 
         Returns
         -------
-        self : object
+        `self` : object
             Returns the instance itself.
         '''
         if self.precomputed == False:
@@ -139,13 +139,13 @@ class diagram_kpca:
         
         Parameters
         ----------
-        X : ndarray or list.
-            The new data to project. If `precomputed` was set to `False` then `X` is a list of persistence diagrams, otherwise `X` is a cross-Gram matrix, where `other_diagrams`
-            was the set of training persistence diagrams.
+        `X` : {array-like of shape `(n_diagrams, n_diagrams)`} or {list of length `n_diagrams`}
+            Either a precomputed (cross) Gram matrix of shape `(n_new_diagrams, n_diagrams)` (between the new persistence diagrams and the 
+            training set diagrams, if `precomputed` was set to `True`) or a list of `n_new_diagrams` many persistence diagrams (otherwise).
 
         Returns
         -------
-        X_new : ndarray
+        `X_new` : ndarray
             The embedding of the new persistence diagrams.
         
         '''
@@ -157,15 +157,15 @@ class diagram_kpca:
         
         Parameters
         ----------
-        X : ndarray or list
-            Either a precomputed distance matrix of persistence diagrams (if `precomputed` was set to `True`) or a list of persistence diagrams (otherwise).
-        y : Ignored
+        `X` : {array-like of shape `(n_diagrams, n_diagrams)`} or {list of length `n_diagrams`}
+            Either a precomputed Gram matrix of `n_diagrams` many persistence diagrams (if `precomputed` was set to `True`) or a list of `n_diagrams` many persistence diagrams (otherwise).
+        `y` : Ignored
             Not used, present for API consistency by convention.
 
         Returns
         -------
-        X_new : ndarray
-            X transformed in the new space.
+        `X_new` : ndarray
+            `X` transformed in the new space.
         '''
         self = self.fit(X, y)
         X_new = self.transform(X)
