@@ -23,3 +23,17 @@ def test_mds():
         mds_diags.fit_transform(DM)
     with pytest.raises(Exception, match = 'True'):
         mds_precomp.fit_transform([D1, D2, D3])
+
+def test_kpca():
+    D1 = [array([2,3]).reshape(1,2)]
+    D2 = [array([2,3.1,5,6]).reshape(2,2)]
+    D3 = [array([2,3.1]).reshape(1,2)]
+    kpca = diagram_kpca(random_state = 1, diagrams = [D1, D2, D3], n_cores = 2)
+    kpca3 = diagram_kpca(n_components = 3, random_state = 1, diagrams = [D1, D2, D3], n_cores = 2)
+    FT = kpca.fit_transform([D1, D2, D3])
+    assert_allclose(FT, kpca.fit([D1, D2, D3]).transform([D1, D2, D3]), atol = 1e-4)
+    FT3 = kpca3.fit_transform([D1, D2, D3])
+    assert_allclose(FT3[:,0:2], FT, atol = 1e-4)
+    assert FT3.shape[1] == 3
+
+
