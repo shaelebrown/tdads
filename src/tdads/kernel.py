@@ -23,6 +23,13 @@ class kernel:
         `n_cores` : int
             The number of CPU cores to use for parallel computation of distance matrices. Default is the
             number of available cores minus 1.
+        
+        Attributes
+        ----------
+        `distance` : tdads.distance.distance
+            The Fisher information metric distance object.
+        `t` : float
+            The input `t` parameter.
         '''
         self.dist = distance(dim = dim, metric = 'FIM', sigma = sigma, n_cores = n_cores)
         if not isinstance(t,type(2)) and not isinstance(t,type(2.0)):

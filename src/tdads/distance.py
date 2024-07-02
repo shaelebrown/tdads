@@ -30,6 +30,19 @@ class distance:
         `n_cores` : int
             The number of CPU cores to use for parallel computation of distance matrices. Default is the
             number of available cores minus 1.
+        
+        Attributes
+        ----------
+        `dim` : int
+            The input `dim` parameter.
+        `metric` : str
+            The input `metric` parameter.
+        `p` : float
+            The input `p` parameter.
+        `sigma` : float
+            The input `sigma` parameter.
+        `n_cores` : int
+            The input `n_cores` parameter.
         '''
         if not isinstance(dim,type(2)):
             raise Exception('dim must be an integer.')
