@@ -1,5 +1,5 @@
 
-from numpy import where, append, empty, array
+from numpy import where, append, empty, array, cumsum
 
 # functions to check persistence diagrams and convert diagrams between formats
 def check_diagram(D):
@@ -41,6 +41,8 @@ def preprocess_diagram(D, ret = False):
     `D` : any
         The persistence diagram to be verified. An exception will be raised if `D` is not a persistence
         diagram computed from one of the aforementioned packages.
+    `ret` : bool, default `False`
+        Whether or not to return a processed diagram.
     
     Returns
     -------
@@ -105,5 +107,22 @@ def preprocess_diagram(D, ret = False):
     else:
         raise Exception(error_message)
 
+def preprocess_diagram_groups_for_inference(diagram_groups):
+    '''Added preprocessing for permutation test.
     
+    Parameters
+    ----------
+    `diagram_groups` : list of lists
+        Contains the persistence diagrams for the permutation test.
+    
+    Returns
+    -------
+    List of dicts and list of int
+        Each element in the first list contains the diagram (key 'diagram') and its index in the total list (key 'ind').
+        The second list contains the cumulative sum of group sizes, starting with 0.
+    '''
+    group_sizes = [len(g) for g in diagram_groups]
+    csum_group_sizes = [0].append(cumsum(group_sizes))
+    diagram_groups = [[{'diagram':preprocess_diagram_groups_for_inference(diagram_groups[g][i], ret = True), 'ind':csum_group_sizes[g] + i} for i in range(len(diagram_groups[g]))] for g in diagram_groups]
+    return 
             
