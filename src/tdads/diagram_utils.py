@@ -1,5 +1,5 @@
 
-from numpy import where, append, empty, array, cumsum
+from numpy import where, append, array, cumsum, concatenate
 
 # functions to check persistence diagrams and convert diagrams between formats
 def check_diagram(D):
@@ -121,8 +121,12 @@ def preprocess_diagram_groups_for_inference(diagram_groups):
         Each element in the first list contains the diagram (key 'diagram') and its index in the total list (key 'ind').
         The second list contains the cumulative sum of group sizes, starting with 0.
     '''
+    if not isinstance(diagram_groups, type([0,1])):
+        raise Exception('diagram_groups must be a list.')
+    if set([type(x) for x in diagram_groups]) != set([type([0,1])]):
+        raise Exception('Each element of diagram_groups must be a list.')
     group_sizes = [len(g) for g in diagram_groups]
-    csum_group_sizes = [0].append(cumsum(group_sizes))
-    diagram_groups = [[{'diagram':preprocess_diagram_groups_for_inference(diagram_groups[g][i], ret = True), 'ind':csum_group_sizes[g] + i} for i in range(len(diagram_groups[g]))] for g in diagram_groups]
-    return 
+    csum_group_sizes = concatenate([array([0]), cumsum(group_sizes)])
+    diagram_groups = [[{'diagram':preprocess_diagram(diagram_groups[g][i], ret = True), 'ind':csum_group_sizes[g] + i} for i in range(len(diagram_groups[g]))] for g in range(len(diagram_groups))]
+    return diagram_groups, csum_group_sizes
             

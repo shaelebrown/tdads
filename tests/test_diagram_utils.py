@@ -93,4 +93,28 @@ def test_preprocess_diagram():
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))])
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))],ret=True)
+
+def test_preprocess_diagram_groups():
+    '''For inference'''
+    with pytest.raises(Exception, match = 'diagram_groups'):
+        preprocess_diagram_groups_for_inference(2)
+    with pytest.raises(Exception, match = 'diagram_groups'):
+        preprocess_diagram_groups_for_inference([0,1])
+    with pytest.raises(Exception, match = 'computed'):
+        preprocess_diagram_groups_for_inference([[0,1,2],[0,1,2]])
+    data = random((100,2))
+    diagrams = ripser(data)
+    dgs, csum = preprocess_diagram_groups_for_inference([[diagrams, diagrams], [diagrams, diagrams]])
+    assert len(dgs) == 2
+    assert len(dgs[0]) == 2
+    assert len(dgs[1]) == 2
+    assert all(csum == array([0,2,4]))
+    assert [[x['ind'] for x in g] for g in dgs] == [[0,1],[2,3]]
+    dgs, csum = preprocess_diagram_groups_for_inference([[diagrams, diagrams], [diagrams], [diagrams, diagrams, diagrams]])
+    assert len(dgs) == 3
+    assert len(dgs[0]) == 2
+    assert len(dgs[1]) == 1
+    assert len(dgs[2]) == 3
+    assert all(csum == array([0,2,3,6]))
+    assert [[x['ind'] for x in g] for g in dgs] == [[0,1],[2],[3,4,5]]
     
