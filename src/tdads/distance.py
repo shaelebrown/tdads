@@ -10,26 +10,25 @@ from itertools import product
 
 # add in extra parameter for n_cores in distance constructor
 class distance:
-    def __init__(self, dim:int = 0,metric='W',p:float=2, sigma:float=None, n_cores:int=cpu_count() - 1):
+    def __init__(self, dim:int = 0,metric='W',p:float=2.0, sigma:float=None, n_cores:int=cpu_count() - 1):
         '''Create a distance object.
         
-        Available distance metrics are the wasserstein, bottleneck and Fisher information metric distances.
+        Available distance metrics are the Wasserstein, bottleneck and Fisher information metric distances.
 
         Parameters
         ----------
-        `dim` : int
-            The non-negative homological dimension in which distances will be computed (default 0).
-        `metric` : str
-            One of \"W\" (default) or \"FIM\" for the wasserstein/bottleneck and Fisher information metric
+        `dim` : int, default 0
+            The non-negative homological dimension in which distances will be computed .
+        `metric` : str, default \"W\"
+            One of \"W\" or \"FIM\" for the Wasserstein/bottleneck and Fisher information metric
             functions respectively.
-        `p` : float
-            The power parameter for the wasserstein metric, must be at least 1 (default 2).
-        `sigma` : float
-            The scale parameter for the Fisher information metric, default None but must be supplied when
+        `p` : float, default 2.0
+            The power parameter for the Wasserstein metric, must be at least 1.
+        `sigma` : float, default `None`
+            The scale parameter for the Fisher information metric, must be supplied when
             `metric` is \"FIM\".
-        `n_cores` : int
-            The number of CPU cores to use for parallel computation of distance matrices. Default is the
-            number of available cores minus 1.
+        `n_cores` : int, default is the number of available cores minus 1.
+            The number of CPU cores to use for parallel computation of distance matrices.
         
         Attributes
         ----------

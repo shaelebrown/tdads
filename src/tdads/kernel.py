@@ -14,19 +14,18 @@ class kernel:
 
         Parameters
         ----------
-        `dim` : int
-            The non-negative homological dimension in which kernels will be computed (default 0).
-        `sigma` : float
-            The scale parameter for the Fisher information metric, default 1.
-        `t` : float
-            The positive dispersion parameter for the persistence Fisher kernel, default 1.
-        `n_cores` : int
-            The number of CPU cores to use for parallel computation of distance matrices. Default is the
-            number of available cores minus 1.
+        `dim` : int, default 0
+            The non-negative homological dimension in which kernels will be computed.
+        `sigma` : float, default 1
+            The scale parameter for the Fisher information metric.
+        `t` : float, default 1
+            The positive dispersion parameter for the persistence Fisher kernel.
+        `n_cores` : int, default is the number of available cores minus 1
+            The number of CPU cores to use for parallel computation of distance matrices.
         
         Attributes
         ----------
-        `distance` : tdads.distance.distance
+        `distance` : `tdads.distance.distance`
             The Fisher information metric distance object.
         `t` : float
             The input `t` parameter.

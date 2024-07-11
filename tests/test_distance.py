@@ -36,7 +36,7 @@ def test_distance_class():
     with pytest.raises(Exception, match = 'n_cores'):
         dist = distance(n_cores=10000)
     dist = distance()
-    assert dist.__str__() == '2-wasserstein distance.'
+    assert dist.__str__() == '2.0-wasserstein distance.'
     dist = distance(metric = 'FIM', sigma = 2)
     assert dist.__str__() == 'Fisher information metric with parameter sigma = 2.'
     dist = distance(p = float('inf'))
