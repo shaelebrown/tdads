@@ -171,14 +171,14 @@ class distance:
             v1 = D1_sub.shape[0] - n_diag2
             v2 = D2_sub.shape[0] - n_diag1
             if v1 < D1_sub.shape[0] and v2 < D2_sub.shape[0]:
-                dist_mat[range(D1_sub.shape[0] - n_diag2, D1_sub.shape[0]),range(D2_sub.shape[0] - n_diag1, D2_sub.shape[0])] = 0
+                dist_mat[range(v1, D1_sub.shape[0]),range(v2, D2_sub.shape[0])] = 0
             # if wasserstein distance then exponentiate
             if self.p < float('inf'):
                 dist_mat = dist_mat**self.p
             # solve linear sum assignment problem
             row_ind, col_ind = linear_sum_assignment(cost_matrix = dist_mat, maximize = False)
             # subset to remove matches between projection points
-            good_inds = logical_or(row_ind < D1_sub.shape[0] - n_diag2, col_ind < D2_sub.shape[0] - n_diag1)
+            good_inds = logical_or(row_ind < v1, col_ind < v2)
             row_ind = row_ind[good_inds]
             col_ind = col_ind[good_inds]
             # return distance value
