@@ -98,7 +98,9 @@ class distance:
         Returns
         -------
         float
-            The numeric distance calculation value.
+            The numeric distance calculation value. In dimension 0 persistence diagrams may contain a point whose death is inf,
+            and these points are ignored (if you wish to use these points make sure to replace inf with the maximum filtration value
+            you used to compute the diagram).
 
         Examples
         --------
@@ -136,9 +138,9 @@ class distance:
             D2_sub = D2[self.dim]
         else:
             D2_sub = empty((0,2))
-        # avoid infinity's in diagrams
-        if float('inf') in D1_sub[:,1] or float('inf') in D2_sub[:,1]:
-            raise Exception('Infinity value found in a diagram - infinities should be removed prior to distance calculations.')
+        # remove infinity's in diagrams
+        D1_sub = D1_sub[D1_sub[:,1] != float('inf')]
+        D2_sub = D2_sub[D2_sub[:,1] != float('inf')]
         # remove diagonal points from both diagrams
         D1_sub = D1_sub[(D1_sub[:,0] < D1_sub[:,1]),:]
         D2_sub = D2_sub[(D2_sub[:,0] < D2_sub[:,1]),:]

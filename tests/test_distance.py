@@ -5,6 +5,7 @@ from tdads.distance import *
 from numpy import array, inf, equal, empty
 from numpy.random import random
 from math import sqrt
+from ripser import ripser
 
 def test_distance_class():
     '''Test class constructor and other basic methods.'''
@@ -91,6 +92,11 @@ def test_distance_calculations():
     assert dist_FIM1.compute(D1,D2) == pytest.approx(0.02354624, abs=1e-4)
     assert dist_FIM1.compute(D1,D3) == pytest.approx(0.08821907, abs=1e-4)
     assert dist_FIM1.compute(D3,D2) == pytest.approx(0.08741134, abs=1e-4)
+    data1 = random((100,2))
+    diagrams1 = ripser(data1)
+    data2 = random((100,2))
+    diagrams2 = ripser(data2)
+    assert dist_b.compute(diagrams1, diagrams2) > 0
 
 def test_distance_matrices():
     '''For distance matrix calculations of all three types.
