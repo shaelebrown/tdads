@@ -2,7 +2,7 @@
 # test file for distance
 import pytest
 from tdads.distance import *
-from numpy import array, inf, equal
+from numpy import array, inf, equal, empty
 from numpy.random import random
 from math import sqrt
 
@@ -78,6 +78,10 @@ def test_distance_calculations():
     D1 = [array([2,3]).reshape((1,2))]
     D2 = [array([[2,3.3],[0,0.5]])]
     D3 = [array([0,0.5]).reshape((1,2))]
+    D4 = [D1[0],D2[0]]
+    d1 = distance(dim = 1)
+    assert d1.compute(D1, D2) == 0
+    assert d1.compute(D1, D4) > 0
     assert dist_w2.compute(D1,D2) == pytest.approx(sqrt(0.1525))
     assert dist_b.compute(D1,D2) == pytest.approx(0.3)
     assert dist_w2.compute(D3,D1) == pytest.approx(sqrt(0.3125))

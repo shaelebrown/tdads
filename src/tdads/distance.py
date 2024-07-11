@@ -3,7 +3,7 @@
 from tdads.diagram_utils import *
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
-from numpy import concatenate, array, logical_or, exp, sqrt, arccos
+from numpy import concatenate, array, logical_or, exp, sqrt, arccos, empty
 from math import pi
 from multiprocessing import Pool, cpu_count
 from itertools import product
@@ -128,8 +128,14 @@ class distance:
         D1 = preprocess_diagram(D1, ret=True)
         D2 = preprocess_diagram(D2, ret=True)
         # subset diagrams to correct dimensions
-        D1_sub = D1[self.dim]
-        D2_sub = D2[self.dim]
+        if len(D1) > self.dim:
+            D1_sub = D1[self.dim]
+        else:
+            D1_sub = empty((0,2))
+        if len(D2) > self.dim:
+            D2_sub = D2[self.dim]
+        else:
+            D2_sub = empty((0,2))
         # avoid infinity's in diagrams
         if float('inf') in D1_sub[:,1] or float('inf') in D2_sub[:,1]:
             raise Exception('Infinity value found in a diagram - infinities should be removed prior to distance calculations.')
