@@ -171,7 +171,8 @@ class distance:
             v1 = D1_sub.shape[0] - n_diag2
             v2 = D2_sub.shape[0] - n_diag1
             if v1 < D1_sub.shape[0] and v2 < D2_sub.shape[0]:
-                dist_mat[range(v1, D1_sub.shape[0]),range(v2, D2_sub.shape[0])] = 0
+                prod = concatenate([array(x).reshape((1,2)) for x in product(range(v1, D1_sub.shape[0]),range(v2, D2_sub.shape[0]))])
+                dist_mat[prod[:,0], prod[:,1]] = 0
             # if wasserstein distance then exponentiate
             if self.p < float('inf'):
                 dist_mat = dist_mat**self.p
