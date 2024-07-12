@@ -2,9 +2,10 @@
 # inference with persistence diagrams
 from tdads.distance import *
 from multiprocessing import cpu_count, Pool
-from numpy import ones
+from numpy import ones, ndarray, percentile, array, float64, equal
 from itertools import repeat, combinations
-from random import sample
+from random import sample, choices
+from inspect import getfullargspec
 
 # permutation test
 class perm_test:
@@ -192,7 +193,135 @@ class perm_test:
             test_statistics_ret[str(self.dims[i])] = test_statistics[i]
             p_values_ret[str(self.dims[i])] = (sum(perm_values[i] <= test_statistics[i]) + 1)/(self.iterations + 1)
         return {'permvals':perm_values_ret, 'test_statistics':test_statistics_ret, 'p_values':p_values_ret}
+    
+class diagram_bootstrap:
+    def __init__(self, diag_fun:function, dims:list = [0], num_samples:int = 20, alpha:float = 0.05, n_cores:int = cpu_count() - 1):
+        '''Compute confidence sets for (the topological features within) persistence diagrams.
         
+        Parameters
+        ----------
+        `diag_fun` : function of two variables `X` and `thresh`
+            The persistent homology algorithm (Vietoris Rips) for the dataset `X` up to 
+            radius `thresh`. The maximum homological dimension should be the same as the
+            maximum value of `dims`.
+        `dims` : list of int, default [0]
+            The list of homological dimensions in which to compute confidence sets.
+        `num_samples` : int, default 20
+            The number of bootstrap resamplings to carry out.
+        `alpha` : float, default 0.05
+            The type 1 error for determining significant topological features.
+
+        Attributes
+        ----------
+        `diag_fun` : function
+            The input `diag_fun` parameter.
+        `dims` : list
+            The input `dims` parameter.
+        `num_samples` : int
+            The input `num_samples` parameter.
+        `alpha` : float
+            The input `alpha` parameter.
+        
+        Citations
+        ---------
+        Chazal F et al (2017). "Robust Topological Inference: Distance to a Measure and Kernel Distance." https://www.jmlr.org/papers/volume18/15-484/15-484.pdf.
+        '''
+        def check_fun(a, b):
+            return 1
+        if not isinstance(diag_fun, type(check_fun)):
+            raise Exception('diag_fun must be a function.')
+        if getfullargspec(diag_fun)[0] != ['X', 'thresh']:
+            raise Exception('diag_fun must be a function of two parameters, X and thresh.')
+        diamond = array([[0,0],[1,1],[-1,1],[2,2]])
+        diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]) if d == 0 else array([]).reshape(0,2).astype(float64) for d in range(max(self.dims))]
+        try:
+            sample_res = diag_fun(diamond, float('inf'))
+            sample_res = preprocess_diagram(sample_res, ret = True)
+        except Exception as ex:
+            raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
+        if len(self.dims) > 1:
+            for i in range(1,max(self.dims)):
+                if not (sample_res[i] == diamond_diag[i]).all():
+                    raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
+        self.diag_fun = diag_fun
+
+        if isinstance(num_samples, type(1)) == False:
+            raise Exception('num_samples must be an integer.')
+        if num_samples < 1:
+            raise Exception('num_samples must be at least 1.')
+        self.num_samples = num_samples
+        if not isinstance(dims, type([0,1])):
+            raise Exception('dims must be a list.')
+        if set([type(d) for d in dims]) != set([type(1)]):
+            raise Exception('Each dimension in dims must be an integer.')
+        if min(dims) < 0:
+            raise Exception('Each dimension in dims must be non-negative.')
+        self.dims = dims
+
+        if not isinstance(alpha,type(0.05)):
+            raise Exception('alpha must be a float.')
+        if alpha <= 0 or alpha >= 1:
+            raise Exception('alpha must be between 0 and 1 (non-inclusive).')
+        self.alpha = alpha
+    def __str__(self):
+        s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples and a Type 1 error of ' + str(self.alpha) + '.'
+        return s
+    def compute(self, X:ndarray, thresh:float, distance_mat:bool = False):
+        '''Compute
+        X is 2D
+        
+        '''
+        if not isinstance(X, type(array([0,1]))):
+            raise Exception('X must be a numpy array.')
+        if len(X.shape) != 2 or X.shape[0] < 2 or X.shape[1] < 1:
+            raise Exception('X must be a 2-dimensional array with at least two rows and one column.')
+        if distance_mat and X.shape[0] != X.shape[1]:
+            raise Exception('When distance_mat is True X must have the same number of rows and columns (as a distance matrix).')
+        if not (isinstance(thresh, type(1)) or isinstance(thresh, type(0.1))):
+            raise Exception('thresh must be a number.')
+        if thresh <= 0:
+            raise Exception('thresh must be positive.')
+        # try to calculate the full persistence diagram
+        try:
+            diagram = self.diagram_fun(X, thresh)
+        except Exception as ex:
+            raise Exception('An error occured when diagram_fun tried to compute the persistence diagram of X. The error was: ' + str(ex))
+        # error check the persistence diagram
+        try:
+            diagram = preprocess_diagram(D = diagram, ret = True)
+        except Exception as ex:
+            raise Exception('The output of diagram_fun(X, thresh) was not in the correct format for a persistence diagram.')
+        # create bottleneck distance objects in each dimension
+        distances = [distance(dim = d, p = float('inf'), n_cores = 2) for d in self.dims]
+        # function to bootstrap
+        def get_distances():
+            # generate sample (unique row indices)
+            s = choices(range(len(X)), len(X))
+            s = list(set(s))
+            # subset X
+            if distance_mat:
+                X_sample = X[s, s]
+            else:
+                X_sample = X[s, :]
+            # compute new persistence diagram
+            try:
+                diagram_sample = self.diag_fun(X_sample, thresh)
+            except Exception as ex:
+                raise Exception('An output of diagram_fun was not in the correct format for a persistence diagram.')
+            # compute distances in each desired dimension
+            res = [dist.compute(diagram, diagram_sample) for dist in distances]
+            return res
+        # perform bootstrap
+        bootstrap_values = [get_distances() for i in range(self.num_samples)]
+        # filter by dimension
+        bootstrap_values = [array([bv[i] for bv in bootstrap_values]) for i in range(len(self.dims))]
+        # compute thresholds
+        thresholds = [2*percentile(bv, 1 - self.alpha) for bv in bootstrap_values]
+        # subset diagram by thresholds
+        subsetted_diagram = [diagram[self.dims[i]][diagram[self.dims[i]][:,1] - diagram[self.dims[i]][:,0] > thresholds[i]] if len(diagram) > i else empty((0, 2)) for i in range(len(self.dims))]
+        # set up return dict
+        ret = {'diagram':diagram, 'thresholds':thresholds, 'subsetted_diagram':subsetted_diagram}
+        return ret
 
         
     
