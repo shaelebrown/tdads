@@ -14,31 +14,84 @@ $ pip install tdads
 
 ## API
 
-FIX FUNCTION NAMES
-
 `tdads` has two major modules:
 
-1.  Machine learning. The functions `diagram_mds`, `diagram_kpca` and
-    `predict_diagram_kpca` can be used to project a group of diagrams
-    into a low dimensional space (i.e. dimension reduction). The
-    functions `diagram_kkmeans` and `predict_diagram_kkmeans` can be
-    used to cluster a group of diagrams. The functions `diagram_ksvm`
-    and `predict_diagram_ksvm` can be used to link, through a prediction
-    function, persistence diagrams and an outcome (i.e. dependent)
-    variable.
-2.  Statistics. The `permutation_test` function acts like an ANOVA test
-    for identifying group differences of persistence diagrams. The `bootstrap_persistence_thresholds` function can be used to identify 
+1.  Machine learning. The classes `diagram_mds` and `diagram_kpca` and
+    can be used to project a group of diagrams
+    into a low dimensional space (i.e. dimension reduction). 
+2.  Statistics. The `permutation_test` class can carry out ANOVA-like tests
+    for identifying group differences of persistence diagrams. 
+    The `diagram_bootstrap` class can be used to identify 
     statistically significant topological features in a dataset.
-
-Not only does `tdads` provide methods for the applied analysis of
-persistence diagrams which were previously unavailable, but an emphasis
-on speed and scalability through parallelization, C code, avoiding
-redundant slow computations, etc., makes `tdads` a powerful tool
-for carrying out applied analyses of persistence diagrams.
 
 ## Usage
 
-- TODO
+As an example we will 
+1. create 10 persistence diagrams from two distinct groups, 
+2. describe the significant topological features in each diagram,
+3. resolve the two groups with MDS, and 
+4. capture the group difference using a permutation test.
+
+```python
+from tdads.machine_learning import *
+from tdads.inference import *
+from numpy.random import uniform
+from math import cos, sin
+from ripser import ripser
+import matplotlib.pyplot as plt
+
+# function to create a circle dataset and
+# compute its diagram
+def circle_diagram():
+    # sample 100 points from the unit circle
+    theta = uniform(low = 0, high = 2*pi, size = 100)
+    data = array([[cos(theta[i]), sin(theta[i])] for i in range(100)])
+    # compute persistence diagram
+    diag = ripser(data, maxdim = 2)
+    return [data, diag]
+
+# function to create a sphere dataset and
+# compute its diagram
+def sphere_diagram():
+    # sample 100 points from the unit sphere
+    phi = uniform(low = 0, high = 2*pi, size = 100)
+    theta = uniform(low = 0, high = pi, size = 100)
+    data = array([[sin(theta[i])*cos(phi[i]), sin(theta[i])*sin(phi[i]), cos(theta[i])] for i in range(100)])
+    # compute persistence diagram
+    diag = ripser(data, maxdim = 2)
+    return [data, diag]
+
+# create 10 diagrams, three from circle datasets and
+# three from sphere datasets
+result = [circle_diagram(), circle_diagram(), circle_diagram(), circle_diagram(), circle_diagram(),
+          sphere_diagram(), sphere_diagram(), sphere_diagram(), sphere_diagram(), sphere_diagram()]
+data = [r[0] for r in result]
+diagrams = [r[1] for r in result]
+
+# use the bootstrap procedure to determine the significant
+# topological features in each diagram
+def diag_fun(X, thresh):
+    return ripser(X = X, thresh = thresh, maxdim = 2)
+boot = diagram_bootstrap(diag_fun = diag_fun, dims = [0,1,2], alpha = 0.01)
+boot_diagrams = [boot.compute(X = d, thresh = 2) for d in data]
+
+# the subsetted diagrams show that only the first five diagrams have 
+# one loop and only the last five diagrams have one void:
+[print('Num clusters:' + str(len(d['subsetted_diagram'][0])) + ', num loops: ' + str(len(d['subsetted_diagram'][1])) + ', num voids: ' + str(len(d['subsetted_diagram'][2]))) for d in boot_diagrams]
+
+# a 2D MDS projection of the 6 diagrams resolves the two groups:
+mds = diagram_mds(p = float('inf'), dim = 2) # for 2-dimensional homology
+emb = mds.fit_transform(diagrams)
+plt.scatter(emb[:,0], emb[:,1], color = ['red','red','red','red','red','blue','blue','blue','blue','blue'])
+plt.xlabel('Embedding dim 1')
+plt.ylabel('Embedding dim 2')
+plt.show()
+
+# a permutation test captures the group differences in all dimensions
+pt = perm_test(p = float('inf'), iterations = 50, dims = [0,1,2])
+res = pt.test([[d for d in diagrams[0:5]], [d for d in diagrams[5:10]]])
+res['p_values']
+```
 
 ## Citation
 
