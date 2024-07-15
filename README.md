@@ -61,8 +61,8 @@ def sphere_diagram():
     diag = ripser(data, maxdim = 2)
     return [data, diag]
 
-# create 10 diagrams, three from circle datasets and
-# three from sphere datasets
+# create 10 diagrams, five from circle datasets and
+# five from sphere datasets
 result = [circle_diagram(), circle_diagram(), circle_diagram(), circle_diagram(), circle_diagram(),
           sphere_diagram(), sphere_diagram(), sphere_diagram(), sphere_diagram(), sphere_diagram()]
 data = [r[0] for r in result]
@@ -79,7 +79,7 @@ boot_diagrams = [boot.compute(X = d, thresh = 2) for d in data]
 # one loop and only the last five diagrams have one void:
 [print('Num clusters:' + str(len(d['subsetted_diagram'][0])) + ', num loops: ' + str(len(d['subsetted_diagram'][1])) + ', num voids: ' + str(len(d['subsetted_diagram'][2]))) for d in boot_diagrams]
 
-# a 2D MDS projection of the 6 diagrams resolves the two groups:
+# a 2D MDS projection of the 10 diagrams resolves the two groups:
 mds = diagram_mds(p = float('inf'), dim = 2) # for 2-dimensional homology
 emb = mds.fit_transform(diagrams)
 plt.scatter(emb[:,0], emb[:,1], color = ['red','red','red','red','red','blue','blue','blue','blue','blue'])
