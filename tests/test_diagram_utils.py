@@ -93,6 +93,16 @@ def test_preprocess_diagram():
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))])
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))],ret=True)
+    # check preprocessing with val
+    with pytest.raises(Exception, match = 'val'):
+        preprocess_diagram(diagrams,ret=True, val = [1,2])
+    with pytest.raises(Exception, match = 'val'):
+        preprocess_diagram(diagrams,ret=True, val = 0)
+    with pytest.raises(Exception, match = 'at least'):
+        preprocess_diagram(diagrams,ret=True, val = 0.0001)
+    assert res[0][len(res[0]) - 1, 1] == float('inf')
+    res = preprocess_diagram(diagrams, ret = True, val = 5)
+    assert res[0][len(res[0]) - 1, 1] == 5
 
 def test_preprocess_diagram_groups():
     '''For inference'''
@@ -117,4 +127,3 @@ def test_preprocess_diagram_groups():
     assert len(dgs[2]) == 3
     assert all(csum == array([0,2,3,6]))
     assert [[x['ind'] for x in g] for g in dgs] == [[0,1],[2],[3,4,5]]
-    

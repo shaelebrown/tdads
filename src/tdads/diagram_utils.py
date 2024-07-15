@@ -30,7 +30,7 @@ def check_diagram(D):
     if where(birth < 0)[0].shape[0] > 0:
         raise Exception('Birth values have to be non-negative.')
 
-def preprocess_diagram(D, ret = False):
+def preprocess_diagram(D, val = None, ret = False):
     '''Verify the format of a persistence diagram and convert to a standard format.
     
     This function can verify a persistence diagram from the ripser, gph, flagser, gudhi or cechmate packages 
@@ -41,6 +41,9 @@ def preprocess_diagram(D, ret = False):
     `D` : any
         The persistence diagram to be verified. An exception will be raised if `D` is not a persistence
         diagram computed from one of the aforementioned packages.
+    `val` : float or int, default `None`
+        The value with which `inf` values should be replaced if desired. `inf` values will throw an error
+        in distance calculations.
     `ret` : bool, default `False`
         Whether or not to return a processed diagram.
     
@@ -50,6 +53,21 @@ def preprocess_diagram(D, ret = False):
         If `ret` is `True` and the diagram is verified then a list is returned. The i-th element of 
         the returned list is the array of i-dimensional topological features in the diagram.
     '''
+    # error check val
+    def check_val(D, val):
+        if val != None:
+            if not isinstance(val, type(2.0)) and not isinstance(val, type(2)):
+                raise Exception('val must be a number.')
+            if val <= 0:
+                raise Exception('val must be positive.')
+            max_death = max([d[d[:,1] != float('inf')].max() for d in D])
+            if val < max_death:
+                raise Exception('val should be at least as large as any death value in the diagram.')
+            # replace vals
+            D[0][D[0][:,1] == float('inf')] = val
+            return D
+        else:
+            return D
     error_message = 'Diagrams must be computed from either the ripser, gph, flagser, gudhi or cechmat libraries.'
     # first check if the diagram is from ripser, gph or flagser
     if isinstance(D, dict):
@@ -68,7 +86,7 @@ def preprocess_diagram(D, ret = False):
         # perform final numeric diagram checks
         lst = [check_diagram(d) for d in D]
         if ret == True:
-            return D
+            return check_val(D, val)
     # now check if diagram is from cechmate or gudhi
     elif isinstance(D, list):
         if set([type(x) for x in D]) == set([type((1,2))]):
@@ -91,7 +109,7 @@ def preprocess_diagram(D, ret = False):
             res = [r[range(1,len(r)),:] for r in res]
             lst = [check_diagram(d) for d in res]
             if ret == True:
-                return res
+                return check_val(res, val)
         elif set([type(x) for x in D]) == set([type(array([0,1]))]):
             if set([len(x.shape) for x in D]) != set([2]):
                 raise Exception(error_message)
@@ -101,12 +119,12 @@ def preprocess_diagram(D, ret = False):
             # final numeric diagram checks
             lst = [check_diagram(d) for d in D]
             if ret == True:
-                return D
+                return check_val(D, val)
         else:
             raise Exception(error_message)
     else:
         raise Exception(error_message)
-
+    
 def preprocess_diagram_groups_for_inference(diagram_groups):
     '''Added preprocessing for permutation test.
     
@@ -129,4 +147,3 @@ def preprocess_diagram_groups_for_inference(diagram_groups):
     csum_group_sizes = concatenate([array([0]), cumsum(group_sizes)])
     diagram_groups = [[{'diagram':preprocess_diagram(diagram_groups[g][i], ret = True), 'ind':csum_group_sizes[g] + i} for i in range(len(diagram_groups[g]))] for g in range(len(diagram_groups))]
     return diagram_groups, csum_group_sizes
-            
