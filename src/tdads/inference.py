@@ -3,6 +3,7 @@
 from tdads.distance import *
 from multiprocessing import cpu_count, Pool
 from numpy import ones, ndarray, percentile, array, float64, equal
+from numpy.testing import assert_almost_equal
 from itertools import repeat, combinations
 from random import sample, choices
 from inspect import getfullargspec
@@ -195,7 +196,7 @@ class perm_test:
         return {'permvals':perm_values_ret, 'test_statistics':test_statistics_ret, 'p_values':p_values_ret}
     
 class diagram_bootstrap:
-    def __init__(self, diag_fun:function, dims:list = [0], num_samples:int = 20, alpha:float = 0.05, n_cores:int = cpu_count() - 1):
+    def __init__(self, diag_fun, dims:list = [0], num_samples:int = 20, alpha:float = 0.05):
         '''Compute confidence sets for (the topological features within) persistence diagrams.
         
         Parameters
@@ -232,16 +233,25 @@ class diagram_bootstrap:
             raise Exception('diag_fun must be a function.')
         if getfullargspec(diag_fun)[0] != ['X', 'thresh']:
             raise Exception('diag_fun must be a function of two parameters, X and thresh.')
+        if not isinstance(dims, type([0,1])):
+            raise Exception('dims must be a list.')
+        if set([type(d) for d in dims]) != set([type(1)]):
+            raise Exception('Each dimension in dims must be an integer.')
+        if min(dims) < 0:
+            raise Exception('Each dimension in dims must be non-negative.')
+        self.dims = dims
         diamond = array([[0,0],[1,1],[-1,1],[2,2]])
-        diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]) if d == 0 else array([]).reshape(0,2).astype(float64) for d in range(max(self.dims))]
+        diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]) if d == 0 else array([]).reshape(0,2).astype(float64) for d in range(len(self.dims))]
         try:
             sample_res = diag_fun(diamond, float('inf'))
             sample_res = preprocess_diagram(sample_res, ret = True)
         except Exception as ex:
             raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
         if len(self.dims) > 1:
-            for i in range(1,max(self.dims)):
-                if not (sample_res[i] == diamond_diag[i]).all():
+            for i in range(len(self.dims)):
+                try:
+                    assert_almost_equal(sample_res[i], diamond_diag[i], 7)
+                except:
                     raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
         self.diag_fun = diag_fun
 
@@ -250,13 +260,6 @@ class diagram_bootstrap:
         if num_samples < 1:
             raise Exception('num_samples must be at least 1.')
         self.num_samples = num_samples
-        if not isinstance(dims, type([0,1])):
-            raise Exception('dims must be a list.')
-        if set([type(d) for d in dims]) != set([type(1)]):
-            raise Exception('Each dimension in dims must be an integer.')
-        if min(dims) < 0:
-            raise Exception('Each dimension in dims must be non-negative.')
-        self.dims = dims
 
         if not isinstance(alpha,type(0.05)):
             raise Exception('alpha must be a float.')
@@ -283,20 +286,20 @@ class diagram_bootstrap:
             raise Exception('thresh must be positive.')
         # try to calculate the full persistence diagram
         try:
-            diagram = self.diagram_fun(X, thresh)
+            diagram = self.diag_fun(X, thresh)
         except Exception as ex:
-            raise Exception('An error occured when diagram_fun tried to compute the persistence diagram of X. The error was: ' + str(ex))
+            raise Exception('An error occured when diag_fun tried to compute the persistence diagram of X. The error was: ' + str(ex))
         # error check the persistence diagram
         try:
             diagram = preprocess_diagram(D = diagram, ret = True)
         except Exception as ex:
-            raise Exception('The output of diagram_fun(X, thresh) was not in the correct format for a persistence diagram.')
+            raise Exception('The output of diagam_fun(X, thresh) was not in the correct format for a persistence diagram.')
         # create bottleneck distance objects in each dimension
         distances = [distance(dim = d, p = float('inf'), n_cores = 2) for d in self.dims]
         # function to bootstrap
         def get_distances():
             # generate sample (unique row indices)
-            s = choices(range(len(X)), len(X))
+            s = choices(population = range(len(X)), k = len(X))
             s = list(set(s))
             # subset X
             if distance_mat:
@@ -307,7 +310,7 @@ class diagram_bootstrap:
             try:
                 diagram_sample = self.diag_fun(X_sample, thresh)
             except Exception as ex:
-                raise Exception('An output of diagram_fun was not in the correct format for a persistence diagram.')
+                raise Exception('An output of diag_fun was not in the correct format for a persistence diagram.')
             # compute distances in each desired dimension
             res = [dist.compute(diagram, diagram_sample) for dist in distances]
             return res
@@ -318,7 +321,7 @@ class diagram_bootstrap:
         # compute thresholds
         thresholds = [2*percentile(bv, 1 - self.alpha) for bv in bootstrap_values]
         # subset diagram by thresholds
-        subsetted_diagram = [diagram[self.dims[i]][diagram[self.dims[i]][:,1] - diagram[self.dims[i]][:,0] > thresholds[i]] if len(diagram) > i else empty((0, 2)) for i in range(len(self.dims))]
+        subsetted_diagram = [diagram[i][diagram[i][:,1] - diagram[i][:,0] > thresholds[self.dims.index(i)]] if i in self.dims else empty((0, 2)) for i in range(max(self.dims) + 1)]
         # set up return dict
         ret = {'diagram':diagram, 'thresholds':thresholds, 'subsetted_diagram':subsetted_diagram}
         return ret
