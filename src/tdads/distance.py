@@ -10,7 +10,7 @@ from itertools import product
 
 # add in extra parameter for n_cores in distance constructor
 class distance:
-    def __init__(self, dim:int = 0,metric='W',p:float=2.0, sigma:float=None, n_cores:int=cpu_count() - 1):
+    def __init__(self, dim:int = 0,metric='W',p:float=2.0, sigma:float=None, inf_replace_val:float = None, n_cores:int=cpu_count() - 1):
         '''Create a distance object.
         
         Available distance metrics are the Wasserstein, bottleneck and Fisher information metric distances.
@@ -27,6 +27,9 @@ class distance:
         `sigma` : float, default `None`
             The scale parameter for the Fisher information metric, must be supplied when
             `metric` is \"FIM\".
+        `inf_replace_val` : float or int, default `None`
+            The value with which `inf` values should be replaced, if desired. If `None`, topological features with `inf` values will 
+            be ignored, otherwise original diagrams will be modified.
         `n_cores` : int, default is the number of available cores minus 1.
             The number of CPU cores to use for parallel computation of distance matrices.
         
@@ -40,6 +43,8 @@ class distance:
             The input `p` parameter.
         `sigma` : float
             The input `sigma` parameter.
+        `inf_replace_val` : float
+            The input `inf_replace_val` parameter.
         `n_cores` : int
             The input `n_cores` parameter.
         '''
@@ -67,6 +72,12 @@ class distance:
                 raise Exception('For the Fisher information metric sigma must be positive.')
             self.sigma = sigma
             self.p = None
+        if inf_replace_val != None:
+            if not isinstance(inf_replace_val, type(2.0)) and not isinstance(inf_replace_val, type(2)):
+                raise Exception('inf_replace_val must be a number.')
+            if inf_replace_val <= 0:
+                raise Exception('inf_replace_val must be positive.')
+        self.inf_replace_val = inf_replace_val
         if not isinstance(n_cores,type(2)):
             raise Exception('n_cores must be an integer.')
         if n_cores < 0:
@@ -126,8 +137,8 @@ class distance:
         Vlad I. Morariu, Balaji Vasan Srinivasan, Vikas C. Raykar, Ramani Duraiswami, and Larry S. Davis. Automatic online tuning for fast Gaussian summation. Advances in Neural Information Processing Systems (NIPS), 2008.
         '''
         # preprocess diagrams
-        D1 = preprocess_diagram(D1, ret=True)
-        D2 = preprocess_diagram(D2, ret=True)
+        D1 = preprocess_diagram(D1, ret=True, inf_replace_val = self.inf_replace_val)
+        D2 = preprocess_diagram(D2, ret=True, inf_replace_val = self.inf_replace_val)
         # subset diagrams to correct dimensions
         if len(D1) > self.dim:
             D1_sub = D1[self.dim]

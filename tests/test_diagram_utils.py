@@ -93,15 +93,15 @@ def test_preprocess_diagram():
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))])
     with pytest.raises(Exception, match = 'must be'):
         preprocess_diagram([(1,(0,1)),(0.5,(0,1))],ret=True)
-    # check preprocessing with val
+    # check preprocessing with inf_replace_val
     with pytest.raises(Exception, match = 'val'):
-        preprocess_diagram(diagrams,ret=True, val = [1,2])
+        preprocess_diagram(diagrams,ret=True, inf_replace_val = [1,2])
     with pytest.raises(Exception, match = 'val'):
-        preprocess_diagram(diagrams,ret=True, val = 0)
+        preprocess_diagram(diagrams,ret=True, inf_replace_val = 0)
     with pytest.raises(Exception, match = 'at least'):
-        preprocess_diagram(diagrams,ret=True, val = 0.0001)
+        preprocess_diagram(diagrams,ret=True, inf_replace_val = 0.0001)
     assert res[0][len(res[0]) - 1, 1] == float('inf')
-    res = preprocess_diagram(diagrams, ret = True, val = 5)
+    res = preprocess_diagram(diagrams, ret = True, inf_replace_val = 5)
     assert res[0][len(res[0]) - 1, 1] == 5
 
 def test_preprocess_diagram_groups():

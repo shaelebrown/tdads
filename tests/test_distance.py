@@ -97,6 +97,18 @@ def test_distance_calculations():
     data2 = random((100,2))
     diagrams2 = ripser(data2)
     assert dist_b.compute(diagrams1, diagrams2) > 0
+    D1 = [array([0, float('inf')]).reshape(1,2)]
+    D2 = [array([0, 2]).reshape(1,2)]
+    assert dist_b.compute(D1, D2) == 1
+    dist_b_2 = distance(p = float('inf'), inf_replace_val = 2)
+    assert dist_b_2.compute(D1, D2) == 0
+    D1 = [array([0, float('inf')]).reshape(1,2)]
+    D2 = [array([0, 2]).reshape(1,2)]
+    dist_b_21 = distance(p = float('inf'), inf_replace_val = 2.1)
+    assert abs(dist_b_21.compute(D1, D2) - 0.1) < 1e-7
+    with pytest.raises(Exception, match = 'inf_replace_val'):
+        dist_b_1 = distance(p = float('inf'), inf_replace_val = 1)
+        dist_b_1.compute(D1, D2)
 
 def test_distance_matrices():
     '''For distance matrix calculations of all three types.

@@ -41,6 +41,11 @@ def test_kernel_calculations():
     assert k.compute(D1,D2) == pytest.approx(exp(-1*0.02354624), abs=1e-4)
     assert k.compute(D1,D3) == pytest.approx(exp(-1*0.08821907), abs=1e-4)
     assert k.compute(D3,D2) == pytest.approx(exp(-1*0.08741134), abs=1e-4)
+    D4 = [array([0, float('inf')]).reshape(1,2)]
+    D5 = [array([0, 3.3]).reshape(1,2)]
+    assert k.compute(D1,D4) == pytest.approx(0.8827831030254935, abs=1e-4)
+    k2 = kernel(n_cores = 2, inf_replace_val=3.3)
+    assert k2.compute(D1,D4) == pytest.approx(k.compute(D1, D5), abs=1e-4)
 
 def test_gram_matrices():
     D1 = [array([2,3]).reshape((1,2))]

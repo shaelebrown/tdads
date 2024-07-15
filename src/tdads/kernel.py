@@ -7,7 +7,7 @@ from multiprocessing import cpu_count
 from numpy import exp
 
 class kernel:
-    def __init__(self, dim:int = 0, sigma:float = 1, t:float = 1, n_cores:int = cpu_count() - 1):
+    def __init__(self, dim:int = 0, sigma:float = 1, t:float = 1, inf_replace_val:float = None, n_cores:int = cpu_count() - 1):
         '''Create a kernel object.
         
         Current available option is the persistence Fisher kernel.
@@ -20,6 +20,9 @@ class kernel:
             The scale parameter for the Fisher information metric.
         `t` : float, default 1
             The positive dispersion parameter for the persistence Fisher kernel.
+        `inf_replace_val` : float or int, default `None`
+            The value with which `inf` values should be replaced, if desired. If `None`, topological features with `inf` values will 
+            be ignored, otherwise original diagrams will be modified.
         `n_cores` : int, default is the number of available cores minus 1
             The number of CPU cores to use for parallel computation of distance matrices.
         
@@ -30,7 +33,7 @@ class kernel:
         `t` : float
             The input `t` parameter.
         '''
-        self.dist = distance(dim = dim, metric = 'FIM', sigma = sigma, n_cores = n_cores)
+        self.dist = distance(dim = dim, metric = 'FIM', sigma = sigma, inf_replace_val = inf_replace_val, n_cores = n_cores)
         if not isinstance(t,type(2)) and not isinstance(t,type(2.0)):
             raise Exception('For the persistence Fisher kernel, t must be a number.')
         if t <= 0:

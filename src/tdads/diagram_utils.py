@@ -30,7 +30,7 @@ def check_diagram(D):
     if where(birth < 0)[0].shape[0] > 0:
         raise Exception('Birth values have to be non-negative.')
 
-def preprocess_diagram(D, val = None, ret = False):
+def preprocess_diagram(D, inf_replace_val = None, ret = False):
     '''Verify the format of a persistence diagram and convert to a standard format.
     
     This function can verify a persistence diagram from the ripser, gph, flagser, gudhi or cechmate packages 
@@ -41,9 +41,8 @@ def preprocess_diagram(D, val = None, ret = False):
     `D` : any
         The persistence diagram to be verified. An exception will be raised if `D` is not a persistence
         diagram computed from one of the aforementioned packages.
-    `val` : float or int, default `None`
-        The value with which `inf` values should be replaced if desired. `inf` values will throw an error
-        in distance calculations.
+    `inf_replace_val` : float or int, default `None`
+        The value with which `inf` values should be replaced, if desired.
     `ret` : bool, default `False`
         Whether or not to return a processed diagram.
     
@@ -53,18 +52,18 @@ def preprocess_diagram(D, val = None, ret = False):
         If `ret` is `True` and the diagram is verified then a list is returned. The i-th element of 
         the returned list is the array of i-dimensional topological features in the diagram.
     '''
-    # error check val
-    def check_val(D, val):
-        if val != None:
-            if not isinstance(val, type(2.0)) and not isinstance(val, type(2)):
-                raise Exception('val must be a number.')
-            if val <= 0:
-                raise Exception('val must be positive.')
-            max_death = max([d[d[:,1] != float('inf')].max() for d in D])
-            if val < max_death:
-                raise Exception('val should be at least as large as any death value in the diagram.')
+    # error check inf_replace_val
+    def check_val(D, inf_replace_val):
+        if inf_replace_val != None:
+            if not isinstance(inf_replace_val, type(2.0)) and not isinstance(inf_replace_val, type(2)):
+                raise Exception('inf_replace_val must be a number.')
+            if inf_replace_val <= 0:
+                raise Exception('inf_replace_val must be positive.')
+            max_death = max([d[d[:,1] != float('inf')].max() if len(d[d[:,1] != float('inf')]) > 0 else 0 for d in D])
+            if inf_replace_val < max_death:
+                raise Exception('inf_replace_val should be at least as large as any death value in the diagram.')
             # replace vals
-            D[0][D[0][:,1] == float('inf')] = val
+            D[0][D[0][:,1] == float('inf'),1] = inf_replace_val
             return D
         else:
             return D
@@ -86,7 +85,7 @@ def preprocess_diagram(D, val = None, ret = False):
         # perform final numeric diagram checks
         lst = [check_diagram(d) for d in D]
         if ret == True:
-            return check_val(D, val)
+            return check_val(D, inf_replace_val)
     # now check if diagram is from cechmate or gudhi
     elif isinstance(D, list):
         if set([type(x) for x in D]) == set([type((1,2))]):
@@ -109,7 +108,7 @@ def preprocess_diagram(D, val = None, ret = False):
             res = [r[range(1,len(r)),:] for r in res]
             lst = [check_diagram(d) for d in res]
             if ret == True:
-                return check_val(res, val)
+                return check_val(res, inf_replace_val)
         elif set([type(x) for x in D]) == set([type(array([0,1]))]):
             if set([len(x.shape) for x in D]) != set([2]):
                 raise Exception(error_message)
@@ -119,7 +118,7 @@ def preprocess_diagram(D, val = None, ret = False):
             # final numeric diagram checks
             lst = [check_diagram(d) for d in D]
             if ret == True:
-                return check_val(D, val)
+                return check_val(D, inf_replace_val)
         else:
             raise Exception(error_message)
     else:
