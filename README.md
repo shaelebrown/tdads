@@ -36,7 +36,8 @@ As an example we will
 from tdads.machine_learning import *
 from tdads.inference import *
 from numpy.random import uniform
-from math import cos, sin
+from numpy import array
+from math import cos, sin, pi
 from ripser import ripser
 import matplotlib.pyplot as plt
 

@@ -222,6 +222,20 @@ class diagram_bootstrap:
             The input `num_samples` parameter.
         `alpha` : float
             The input `alpha` parameter.
+
+        Examples
+        --------
+        >>> from tdads.inference import diagram_bootstrap
+        >>> from ripser import ripser
+        >>> from numpy.random import uniform
+        >>> # build circle dataset
+        >>> theta = uniform(low = 0, high = 2*pi, size = 100)
+        >>> data = array([[cos(theta[i]), sin(theta[i])] for i in range(100)])
+        >>> # define persistent homology function
+        >>> def diag_fun(X, thresh):
+        >>>     return ripser(X = X, thresh = thresh)
+        >>> # create bootstrap object
+        >>> boot = diagram_bootstrap(diag_fun = diag_fun)
         
         Citations
         ---------
@@ -270,9 +284,44 @@ class diagram_bootstrap:
         s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples and a Type 1 error of ' + str(self.alpha) + '.'
         return s
     def compute(self, X:ndarray, thresh:float, distance_mat:bool = False):
-        '''Compute
-        X is 2D
+        '''Carry out the bootstrap procedure.
         
+        Parameters
+        ----------
+        `X` : ndarray (2D)
+            The input dataset - either raw tabular data or a distance matrix of samples.
+        `thresh` : float
+            The maximum filtration radius for Vietoris-Rips persistent homology.
+        `distance_mat` : bool, default False
+            Whether `X` is a distance matrix or not.
+
+        Returns
+        -------
+        Dict
+            Entries are 'diagram' (the computed persistence diagram), 'thresholds' (a Dict of the computed
+            persistence thresholds for each desired dimension) and 'subsetted_diagram' (the persistence diagram
+            thresholded by the threshold values in each dimension).
+
+        Examples
+        --------
+        >>> from tdads.inference import diagram_bootstrap
+        >>> from ripser import ripser
+        >>> from numpy.random import uniform
+        >>> # build circle dataset
+        >>> theta = uniform(low = 0, high = 2*pi, size = 100)
+        >>> data = array([[cos(theta[i]), sin(theta[i])] for i in range(100)])
+        >>> # define persistent homology function
+        >>> def diag_fun(X, thresh):
+        >>>     return ripser(X = X, thresh = thresh)
+        >>> # create bootstrap object and compute significant features
+        >>> boot = diagram_bootstrap(diag_fun = diag_fun)
+        >>> res = boot.compute(data, 2)
+        >>> # print subsetted diagram
+        >>> res['subsetted_diagram']
+
+        Citations
+        ---------
+        Chazal F et al (2017). "Robust Topological Inference: Distance to a Measure and Kernel Distance." https://www.jmlr.org/papers/volume18/15-484/15-484.pdf.
         '''
         if not isinstance(X, type(array([0,1]))):
             raise Exception('X must be a numpy array.')

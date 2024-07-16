@@ -125,7 +125,7 @@ def preprocess_diagram(D, inf_replace_val = None, ret = False):
         raise Exception(error_message)
     
 def preprocess_diagram_groups_for_inference(diagram_groups):
-    '''Added preprocessing for permutation test.
+    '''Added preprocessing for permutation tests.
     
     Parameters
     ----------
