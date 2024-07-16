@@ -11,7 +11,7 @@ from itertools import product
 # add in extra parameter for n_cores in distance constructor
 class distance:
     def __init__(self, dim:int = 0,metric='W',p:float=2.0, sigma:float=None, inf_replace_val:float = None, n_cores:int=cpu_count() - 1):
-        '''Create a distance object.
+        '''Distance metrics for persistence diagrams.
         
         Available distance metrics are the Wasserstein, bottleneck and Fisher information metric distances.
 

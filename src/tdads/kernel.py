@@ -8,7 +8,7 @@ from numpy import exp
 
 class kernel:
     def __init__(self, dim:int = 0, sigma:float = 1, t:float = 1, inf_replace_val:float = None, n_cores:int = cpu_count() - 1):
-        '''Create a kernel object.
+        '''Kernel functions for persistence diagrams.
         
         Current available option is the persistence Fisher kernel.
 

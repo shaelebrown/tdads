@@ -11,7 +11,7 @@ from inspect import getfullargspec
 # permutation test
 class perm_test:
     def __init__(self, iterations:int = 20, dims:list = [0], p:float = 2.0, q:float = 2.0, paired:bool = False, n_cores:int = cpu_count() - 1):
-        '''Create a permutation test object. Based on the paper Robinson and Turner 2017, with
+        '''Group difference testing for persistence diagrams. Based on the paper Robinson and Turner 2017, with
         extra functionality detailed in Abdallah 2021.
         
         Parameters
