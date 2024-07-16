@@ -283,134 +283,134 @@ class diagram_kpca:
         X_new = self.transform(X)
         return X_new
 
-class diagram_svm():
-    '''Support vector machine for persistence diagrams.'''
-    def __init__(self, diagrams:list = None, cv:int = 1, dims:list = [0], sigmas:list = [1.0], ts:list = [1.0], precomputed:bool = False, Cs:list = [1.0], epsilons:list = [0.1], n_cores:int = cpu_count() - 1):
-        '''Support vector machines for persistence diagrams.
+# class diagram_svm():
+#     '''Support vector machine for persistence diagrams.'''
+#     def __init__(self, diagrams:list = None, cv:int = 1, dims:list = [0], sigmas:list = [1.0], ts:list = [1.0], precomputed:bool = False, Cs:list = [1.0], epsilons:list = [0.1], n_cores:int = cpu_count() - 1):
+#         '''Support vector machines for persistence diagrams.
         
-        Parameters
-        ----------
-        `diagrams` : list of persistence diagrams, default None
-            When `precomputed = True`, `diagrams` must be supplied in order to call the predict method.
-        `cv` : int, default 1
-            The number of folds for cross validattion. The default is no cross-validation.
-        `dims` : list of int, default [0]
-            The homological dimensions in which to fit SVM models.
-        `sigmas` : list of float, default [1.0]
-            The values of `sigma` for the persistence Fisher kernel.
-        `ts` : list of float, default [1.0]
-            The values of `t` for the persistence Fisher kernel.
-        `precomputed` : bool, default False
-            If `True` then the `fit` method will expect precomputed Gram matrices for training, otherwise
-            a list of persistence diagrams.
-        `Cs` : list of float, default [1.0]
-            A list of regularization parameters. The strength of the regularization is inversely proportional to C. 
-            Must be strictly positive. The penalty is a squared l2.
-        `epsilons` : list of float, default [0.1]
-            A list of epsilons in the epsilon-SVR model. If performing classification set `epsilon = None`. 
-            `epsilons` specifies the epsilon-tubes within which no penalty is associated 
-            in the training loss function with points predicted within a distance epsilon from the actual value. 
-            Must be non-negative.
-        `n_cores` : int
-            The number of CPU cores to use for parallel computation of distance matrices. Default is the
-            number of available cores minus 1.
+#         Parameters
+#         ----------
+#         `diagrams` : list of persistence diagrams, default None
+#             When `precomputed = True`, `diagrams` must be supplied in order to call the predict method.
+#         `cv` : int, default 1
+#             The number of folds for cross validattion. The default is no cross-validation.
+#         `dims` : list of int, default [0]
+#             The homological dimensions in which to fit SVM models.
+#         `sigmas` : list of float, default [1.0]
+#             The values of `sigma` for the persistence Fisher kernel.
+#         `ts` : list of float, default [1.0]
+#             The values of `t` for the persistence Fisher kernel.
+#         `precomputed` : bool, default False
+#             If `True` then the `fit` method will expect precomputed Gram matrices for training, otherwise
+#             a list of persistence diagrams.
+#         `Cs` : list of float, default [1.0]
+#             A list of regularization parameters. The strength of the regularization is inversely proportional to C. 
+#             Must be strictly positive. The penalty is a squared l2.
+#         `epsilons` : list of float, default [0.1]
+#             A list of epsilons in the epsilon-SVR model. If performing classification set `epsilon = None`. 
+#             `epsilons` specifies the epsilon-tubes within which no penalty is associated 
+#             in the training loss function with points predicted within a distance epsilon from the actual value. 
+#             Must be non-negative.
+#         `n_cores` : int
+#             The number of CPU cores to use for parallel computation of distance matrices. Default is the
+#             number of available cores minus 1.
 
-        Attributes
-        ----------
-        `precomputed` : bool
-            The input `precomputed` parameter.
-        `cv` : int
-            The input `cv` parameter. 
-        `diagrams` : list of length `n_diagrams`
-            The input `diagrams` parameter for inference when `precomputed` is `False`.
-        `n_cores` : int
-            The input `n_cores` parameter.
-        `parameter_grid` : ndarray either of shape `(num_param_combos, 5)` or `(num_param_combos, 4)`
-            The cartesian product of all possible model parameter combinations (the number of which is `num_param_combos`).
-            The columns give the values of `dims`, `sigmas`, `ts`, `Cs` and `epsilons` (for regression) in that order, resulting
-            in five columns for classification and four for regression.
-        `models` : list of sklearn.svm._classes.SVR or sklearn.svm._classes.SVC of length `num_param_combos`
-            One model for each row of `parameter_grid` (to be fit with those parameters).
-        `final_model` : None or {sklearn.svm._classes.SVR or sklearn.svm._classes.SVC}
-            Initially None but becomes the optimal model object based on cross-validation results
-            once the `fit` method has been called.
-        `final_model_kernel` : None or tdads.kernel.kernel
-            Initially None but becomes the kernel object with parameters determined by `final_model`
-            once the `fit` method has been called.
-        '''
-        if isinstance(precomputed, type(True)) == False:
-            raise Exception('precomputed must be True or False.')
-        self.precomputed = precomputed
-        if isinstance(cv, type(1)) == False:
-            raise Exception('cv must be an integer.')
-        if cv < 1:
-            raise Exception('cv must be at least 1.')
-        self.cv = cv
-        if isinstance(n_cores, type(1)) == False:
-            raise Exception('n_cores must be an integer.')
-        if n_cores < 1:
-            raise Exception('n_cores must be at least 1.')
-        self.n_cores = n_cores
-        if set([type(d) for d in dims]) != set([type(1)]):
-            raise Exception('Each dimension in dims must be an integer.')
-        if min(dims) < 0:
-            raise Exception('Each dimension in dims must be non-negative.')
-        if set([x in set([type(1), type(1.0)]) for x in set([type(s) for s in sigmas])]) != set([True]):
-            raise Exception('Each sigma value must be a number.')
-        if min(sigmas) <= 0:
-            raise Exception('Each sigma value must be positive.')
-        if set([x in set([type(1), type(1.0)]) for x in set([type(t) for t in ts])]) != set([True]):
-            raise Exception('Each t value must be a number.')
-        if min(ts) <= 0:
-            raise Exception('Each t value must be positive.')
-        if isinstance(Cs, type([0,1])) == False:
-            raise Exception('Cs must be a list.')
-        if isinstance(epsilons, type([0,1])) == False:
-            raise Exception('epsilons must be a list.')
-        if epsilons != None:
-            parameter_grid = product(dims, sigmas, ts, Cs, epsilons)
-        else:
-            parameter_grid = product(dims, sigmas, ts, Cs)
-        parameter_grid = concatenate([[array(x)] for x in parameter_grid])
-        if epsilons == None:
-            self.models = [SVC(C=parameter_grid[i,3]) for i in range(len(parameter_grid))]
-        else:
-            self.models = [SVR(C=parameter_grid[i,3],epsilon=parameter_grid[i,4]) for i in range(len(parameter_grid))]
-        self.final_model = None
-        self.parameter_grid = parameter_grid
-        self.final_model_kernel = None
-    def __str__(self):
-        if self.parameter_grid.shape[1] == 4:
-            task = 'classification'
-        else:
-            task = 'regression'
-        if self.final_model == None:
-            fit_str = 'Model has not yet been fit.'
-        else:
-            fit_str = 'Model has been fit.'
-        return 'Support vector ' + task + ' object. ' + fit_str
-    def fit(self, X, y):
-        '''Fit the SVM model according to the training data.
+#         Attributes
+#         ----------
+#         `precomputed` : bool
+#             The input `precomputed` parameter.
+#         `cv` : int
+#             The input `cv` parameter. 
+#         `diagrams` : list of length `n_diagrams`
+#             The input `diagrams` parameter for inference when `precomputed` is `False`.
+#         `n_cores` : int
+#             The input `n_cores` parameter.
+#         `parameter_grid` : ndarray either of shape `(num_param_combos, 5)` or `(num_param_combos, 4)`
+#             The cartesian product of all possible model parameter combinations (the number of which is `num_param_combos`).
+#             The columns give the values of `dims`, `sigmas`, `ts`, `Cs` and `epsilons` (for regression) in that order, resulting
+#             in five columns for classification and four for regression.
+#         `models` : list of sklearn.svm._classes.SVR or sklearn.svm._classes.SVC of length `num_param_combos`
+#             One model for each row of `parameter_grid` (to be fit with those parameters).
+#         `final_model` : None or {sklearn.svm._classes.SVR or sklearn.svm._classes.SVC}
+#             Initially None but becomes the optimal model object based on cross-validation results
+#             once the `fit` method has been called.
+#         `final_model_kernel` : None or tdads.kernel.kernel
+#             Initially None but becomes the kernel object with parameters determined by `final_model`
+#             once the `fit` method has been called.
+#         '''
+#         if isinstance(precomputed, type(True)) == False:
+#             raise Exception('precomputed must be True or False.')
+#         self.precomputed = precomputed
+#         if isinstance(cv, type(1)) == False:
+#             raise Exception('cv must be an integer.')
+#         if cv < 1:
+#             raise Exception('cv must be at least 1.')
+#         self.cv = cv
+#         if isinstance(n_cores, type(1)) == False:
+#             raise Exception('n_cores must be an integer.')
+#         if n_cores < 1:
+#             raise Exception('n_cores must be at least 1.')
+#         self.n_cores = n_cores
+#         if set([type(d) for d in dims]) != set([type(1)]):
+#             raise Exception('Each dimension in dims must be an integer.')
+#         if min(dims) < 0:
+#             raise Exception('Each dimension in dims must be non-negative.')
+#         if set([x in set([type(1), type(1.0)]) for x in set([type(s) for s in sigmas])]) != set([True]):
+#             raise Exception('Each sigma value must be a number.')
+#         if min(sigmas) <= 0:
+#             raise Exception('Each sigma value must be positive.')
+#         if set([x in set([type(1), type(1.0)]) for x in set([type(t) for t in ts])]) != set([True]):
+#             raise Exception('Each t value must be a number.')
+#         if min(ts) <= 0:
+#             raise Exception('Each t value must be positive.')
+#         if isinstance(Cs, type([0,1])) == False:
+#             raise Exception('Cs must be a list.')
+#         if isinstance(epsilons, type([0,1])) == False:
+#             raise Exception('epsilons must be a list.')
+#         if epsilons != None:
+#             parameter_grid = product(dims, sigmas, ts, Cs, epsilons)
+#         else:
+#             parameter_grid = product(dims, sigmas, ts, Cs)
+#         parameter_grid = concatenate([[array(x)] for x in parameter_grid])
+#         if epsilons == None:
+#             self.models = [SVC(C=parameter_grid[i,3]) for i in range(len(parameter_grid))]
+#         else:
+#             self.models = [SVR(C=parameter_grid[i,3],epsilon=parameter_grid[i,4]) for i in range(len(parameter_grid))]
+#         self.final_model = None
+#         self.parameter_grid = parameter_grid
+#         self.final_model_kernel = None
+#     def __str__(self):
+#         if self.parameter_grid.shape[1] == 4:
+#             task = 'classification'
+#         else:
+#             task = 'regression'
+#         if self.final_model == None:
+#             fit_str = 'Model has not yet been fit.'
+#         else:
+#             fit_str = 'Model has been fit.'
+#         return 'Support vector ' + task + ' object. ' + fit_str
+#     def fit(self, X, y):
+#         '''Fit the SVM model according to the training data.
         
-        Parameters
-        ----------
-        `X` : {array-like of shape `(n_diagrams, n_diagrams)`} or {list of length `n_diagrams`}
-            Either a precomputed Gram matrix of `n_diagrams` many persistence diagrams (if `precomputed` was set to `True`) or a list of `n_diagrams` many persistence diagrams (otherwise).
-        `y` : array-like of shape `(n_diagrams,)`
-            Target values (class labels in classification, real numbers in regression).
+#         Parameters
+#         ----------
+#         `X` : {array-like of shape `(n_diagrams, n_diagrams)`} or {list of length `n_diagrams`}
+#             Either a precomputed Gram matrix of `n_diagrams` many persistence diagrams (if `precomputed` was set to `True`) or a list of `n_diagrams` many persistence diagrams (otherwise).
+#         `y` : array-like of shape `(n_diagrams,)`
+#             Target values (class labels in classification, real numbers in regression).
 
-        Returns
-        -------
-        `self` : object
-            The fitted estimator.
+#         Returns
+#         -------
+#         `self` : object
+#             The fitted estimator.
 
-        Examples
-        --------
-        # DO!
-        '''
-        # make row memberships for cv
-        if self.parameter_grid.shape[1] == 5:
-            1
-        else:
-            1
+#         Examples
+#         --------
+#         # DO!
+#         '''
+#         # make row memberships for cv
+#         if self.parameter_grid.shape[1] == 5:
+#             1
+#         else:
+#             1
 
