@@ -51,6 +51,7 @@ class diagram_mds:
             raise Exception('precomputed must be True or False.')
         self.precomputed = precomputed
     def __str__(self):
+        '''Describe a persistence diagram multidimensional scaling object via its distance metric.'''
         s = 'Non-metric multidimensional scaling of persistence diagrams. Distance metric used: ' + self.distance.__str__
         return s
     def fit_transform(self, X, y:any = None):
@@ -149,6 +150,7 @@ class diagram_kpca:
             raise Exception('diagrams must be a list of diagrams.')
         self.diagrams = diagrams
     def __str__(self):
+        '''Describe a persistence diagram kernel principle components analysis object via its kernel function.'''
         s = 'Kernel PCA of persistence diagrams. Kernel used: ' + self.kernel.__str__
         return s
     def fit(self, X, y:any = None):

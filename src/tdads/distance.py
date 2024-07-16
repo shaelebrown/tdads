@@ -87,6 +87,9 @@ class distance:
         # then check if n_cores is more than the number of available cores
         self.n_cores = n_cores
     def __str__(self):
+        '''Describe a distance metric by type (Wasserstein, bottleneck or 
+        Fisher information metric) and major parameter (`p` for Wasserstein and 
+        `sigma` for Fisher information metric).'''
         if self.sigma != None:
             M = 'Fisher information metric with parameter sigma = ' + str(self.sigma) + '.'
         else:

@@ -34,7 +34,8 @@ def preprocess_diagram(D, inf_replace_val = None, ret = False):
     '''Verify the format of a persistence diagram and convert to a standard format.
     
     This function can verify a persistence diagram from the ripser, gph, flagser, gudhi or cechmate packages 
-    and convert any such diagram into a list of numpy arrays if desired (largely an internal functionality).
+    and convert any such diagram into a list of numpy arrays if desired (largely an internal functionality but
+    can be used in a standalone fashion).
     
     Parameters
     ----------
@@ -125,7 +126,7 @@ def preprocess_diagram(D, inf_replace_val = None, ret = False):
         raise Exception(error_message)
     
 def preprocess_diagram_groups_for_inference(diagram_groups):
-    '''Added preprocessing for permutation tests.
+    '''Additional internal preprocessing for permutation tests.
     
     Parameters
     ----------

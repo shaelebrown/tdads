@@ -40,6 +40,7 @@ class kernel:
             raise Exception('For the persistence Fisher kernel, t must be positive.')
         self.t = t
     def __str__(self):
+        '''Describe a persistence Fisher kernel by its `sigma` and `t` parameters.'''
         return 'Persistence Fisher kernel with sigma = ' + str(self.dist.sigma) + ', t = ' + str(self.t) + '.'
     def compute(self, D1, D2):
         '''Compute the kernel value between two persistence diagrams.

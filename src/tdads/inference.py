@@ -87,6 +87,8 @@ class perm_test:
             raise Exception('paired must be True or False.')
         self.paired = paired
     def __str__(self):
+        '''Describe a permutation test procedure based on the number of permutation iterations
+        and whether the groups are paired or unpaired.'''
         if self.paired == True:
             start_str = 'Paired permutation test with '
         else:
@@ -281,6 +283,8 @@ class diagram_bootstrap:
             raise Exception('alpha must be between 0 and 1 (non-inclusive).')
         self.alpha = alpha
     def __str__(self):
+        '''Describe a bootstrap procedure based on the number of bootstrap samples
+        and the Type 1 error rate (alpha).'''
         s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples and a Type 1 error of ' + str(self.alpha) + '.'
         return s
     def compute(self, X:ndarray, thresh:float, distance_mat:bool = False):
@@ -288,7 +292,7 @@ class diagram_bootstrap:
         
         Parameters
         ----------
-        `X` : ndarray (2D)
+        `X` : numpy.ndarray (2D)
             The input dataset - either raw tabular data or a distance matrix of samples.
         `thresh` : float
             The maximum filtration radius for Vietoris-Rips persistent homology.
