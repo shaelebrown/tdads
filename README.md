@@ -82,7 +82,7 @@ for i in range(10):
     print('Num clusters:' + str(len(boot_diagrams[i]['subsetted_diagram'][0])) + ', num loops: ' + str(len(boot_diagrams[i]['subsetted_diagram'][1])) + ', num voids: ' + str(len(boot_diagrams[i]['subsetted_diagram'][2])))
 
 # a 2D MDS projection of the 10 diagrams resolves the two groups:
-mds = diagram_mds(p = float('inf'), dim = 2) # for 2-dimensional homology
+mds = diagram_mds(p = float('inf'), dim = 1) # for 1-dimensional homology
 emb = mds.fit_transform(diagrams)
 plt.scatter(emb[:,0], emb[:,1], color = ['red','red','red','red','red','blue','blue','blue','blue','blue'])
 plt.xlabel('Embedding dim 1')
