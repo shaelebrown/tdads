@@ -3,7 +3,7 @@
 from tdads.diagram_utils import *
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
-from numpy import concatenate, array, logical_or, exp, sqrt, arccos, empty
+from numpy import concatenate, array, logical_or, exp, sqrt, arccos, empty, zeros
 from math import pi
 from multiprocessing import Pool, cpu_count
 from itertools import product
@@ -265,16 +265,25 @@ class distance:
             if len(other_diagrams) == 0:
                 raise Exception('If supplied, other_diagrams list must not be empty.')
             other_diagrams = [preprocess_diagram(d, ret = True) for d in other_diagrams]
+            prod = [x for x in product(range(len(diagrams)), range(len(other_diagrams)))]
             diagram_product = product(diagrams, other_diagrams)
-            joint_shape = (len(diagrams), len(other_diagrams))
+            D = zeros((len(diagrams), len(other_diagrams)))
         else:
             diagram_product = product(diagrams, diagrams)
-            joint_shape = (len(diagrams), len(diagrams))
+            prod = [x for x in product(range(len(diagrams)), range(len(diagrams)))]
+            prod = [x for x in prod if x[0] < x[1]]
+            diagram_product = iter([(diagrams[p[0]], diagrams[p[1]]) for p in prod])
+            D = zeros((len(diagrams), len(diagrams)))
         # create a pool process and compute distances in parallel
         with Pool(processes=self.n_cores) as pool:
             result = pool.starmap(self.compute, diagram_product)
         # store result in numpy array
-        return array(result).reshape(joint_shape)
+        for i in range(len(prod)):
+            p = prod[i]
+            D[p[0], p[1]] = result[i]
+            if other_diagrams == None:
+                D[p[1], p[0]] = result[i]
+        return D
         
         
 

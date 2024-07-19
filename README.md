@@ -78,7 +78,8 @@ boot_diagrams = [boot.compute(X = d, thresh = 2) for d in data]
 
 # the subsetted diagrams show that only the first five diagrams have 
 # one loop and only the last five diagrams have one void:
-[print('Num clusters:' + str(len(d['subsetted_diagram'][0])) + ', num loops: ' + str(len(d['subsetted_diagram'][1])) + ', num voids: ' + str(len(d['subsetted_diagram'][2]))) for d in boot_diagrams]
+for i in range(10):
+    print('Num clusters:' + str(len(boot_diagrams[i]['subsetted_diagram'][0])) + ', num loops: ' + str(len(boot_diagrams[i]['subsetted_diagram'][1])) + ', num voids: ' + str(len(boot_diagrams[i]['subsetted_diagram'][2])))
 
 # a 2D MDS projection of the 10 diagrams resolves the two groups:
 mds = diagram_mds(p = float('inf'), dim = 2) # for 2-dimensional homology
