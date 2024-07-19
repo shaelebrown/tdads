@@ -6,6 +6,7 @@ from numpy import array
 from numpy.random import random, uniform
 from ripser import ripser
 from math import pi, cos, sin
+from scipy.spatial.distance import cdist
 
 def test_perm_test_constructor():
     with pytest.raises(Exception, match = 'iterations'):
@@ -73,6 +74,10 @@ def test_diagram_bootstrap_constructor():
         bs = diagram_bootstrap(diag_fun = f,num_samples = [0,1])
     with pytest.raises(Exception, match = 'alpha'):
         bs = diagram_bootstrap(diag_fun = f, alpha = '0.05')
+    with pytest.raises(Exception, match = 'distance_mat'):
+        bs = diagram_bootstrap(diag_fun = f, distance_mat = 'False')
+    with pytest.raises(Exception, match = 'computing'):
+        bs = diagram_bootstrap(diag_fun = f, distance_mat = True)
     
 def test_diagram_bootstrap():
     theta = uniform(low = 0, high = 2*pi, size = 100)
@@ -105,4 +110,18 @@ def test_diagram_bootstrap():
     assert res['thresholds'][0]*res['thresholds'][1] > 0
     assert len(res['subsetted_diagram']) == 3
     assert len(res['subsetted_diagram'][2]) == 1
+    # add test for distance matrix ripser!!
+    def f(X, thresh):
+        return ripser(X = X, thresh = thresh, maxdim = 2, distance_matrix=True)
+    bs = diagram_bootstrap(diag_fun = f, num_samples = 3, dims = [0,2], distance_mat=True)
+    with pytest.raises(Exception, match = 'number of rows'):
+        res = bs.compute(X = data, thresh = 2)
+    D = cdist(XA = data, XB = data, metric = 'euclidean')
+    res = bs.compute(X = D, thresh = 2)
+    assert len(res['thresholds']) == 2
+    assert res['thresholds'][0]*res['thresholds'][1] > 0
+    assert len(res['subsetted_diagram']) == 3
+    assert len(res['subsetted_diagram'][2]) == 1
+    # add test for distance matrix ripser!!
+    
     

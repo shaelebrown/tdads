@@ -7,6 +7,7 @@ from numpy.testing import assert_almost_equal
 from itertools import repeat, combinations
 from random import sample, choices
 from inspect import getfullargspec
+import warnings
 
 # permutation test
 class perm_test:
@@ -198,7 +199,7 @@ class perm_test:
         return {'permvals':perm_values_ret, 'test_statistics':test_statistics_ret, 'p_values':p_values_ret}
     
 class diagram_bootstrap:
-    def __init__(self, diag_fun, dims:list = [0], num_samples:int = 20, alpha:float = 0.05):
+    def __init__(self, diag_fun, dims:list = [0], num_samples:int = 20, distance_mat:bool = False, alpha:float = 0.05):
         '''Compute confidence sets for (the topological features within) persistence diagrams.
         
         Parameters
@@ -211,6 +212,8 @@ class diagram_bootstrap:
             The list of homological dimensions in which to compute confidence sets.
         `num_samples` : int, default 20
             The number of bootstrap resamplings to carry out.
+        `distance_mat` : bool, default False
+            Whether the input dataset will be a distance matrix or not.
         `alpha` : float, default 0.05
             The type 1 error for determining significant topological features.
 
@@ -222,6 +225,8 @@ class diagram_bootstrap:
             The input `dims` parameter.
         `num_samples` : int
             The input `num_samples` parameter.
+        `distance_mat` : bool, default False
+            The input `distance_mat` parameter.
         `alpha` : float
             The input `alpha` parameter.
 
@@ -256,19 +261,31 @@ class diagram_bootstrap:
         if min(dims) < 0:
             raise Exception('Each dimension in dims must be non-negative.')
         self.dims = dims
-        diamond = array([[0,0],[1,1],[-1,1],[2,2]])
-        diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]) if d == 0 else array([]).reshape(0,2).astype(float64) for d in range(len(self.dims))]
+
+        if isinstance(distance_mat, type(True)) == False:
+            raise Exception('distance_mat must be True or False.')
+        self.distance_mat = distance_mat
+
+        diamond = array([[0,0],[1,1],[-1,1],[0,2]])
+        dist_diamond = array([[0, sqrt(2), sqrt(2), 2], [sqrt(2), 0, 2, sqrt(2)], [sqrt(2), 2, 0, sqrt(2)], [2, sqrt(2), sqrt(2), 0]])
+        diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]),array([[sqrt(2), 2]])]
+        diamond_diag = [diamond_diag[x] if x < len(diamond_diag) else array([]).reshape(0,2).astype(float64) for x in self.dims]
+        if not distance_mat:
+            X = diamond
+        else:
+            X = dist_diamond
         try:
-            sample_res = diag_fun(diamond, float('inf'))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                sample_res = diag_fun(X, float('inf'))
             sample_res = preprocess_diagram(sample_res, ret = True)
         except Exception as ex:
             raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
-        if len(self.dims) > 1:
-            for i in range(len(self.dims)):
-                try:
-                    assert_almost_equal(sample_res[i], diamond_diag[i], 7)
-                except:
-                    raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
+        for i in self.dims:
+            try:
+                assert_almost_equal(sample_res[i], diamond_diag[self.dims.index(i)], 7)
+            except:
+                raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
         self.diag_fun = diag_fun
 
         if isinstance(num_samples, type(1)) == False:
@@ -283,11 +300,14 @@ class diagram_bootstrap:
             raise Exception('alpha must be between 0 and 1 (non-inclusive).')
         self.alpha = alpha
     def __str__(self):
-        '''Describe a bootstrap procedure based on the number of bootstrap samples
-        and the Type 1 error rate (alpha).'''
-        s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples and a Type 1 error of ' + str(self.alpha) + '.'
+        '''Describe a bootstrap procedure based on the number of bootstrap samples,
+        whether or not the input will be a distance matrix and the Type 1 error rate (alpha).'''
+        dms = ''
+        if not self.distance_mat:
+            dms = 'non-'
+        s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples, ' + '' +  'distance-matrix input, and a Type 1 error of ' + str(self.alpha) + '.'
         return s
-    def compute(self, X:ndarray, thresh:float, distance_mat:bool = False):
+    def compute(self, X:ndarray, thresh:float):
         '''Carry out the bootstrap procedure.
         
         Parameters
@@ -296,8 +316,6 @@ class diagram_bootstrap:
             The input dataset - either raw tabular data or a distance matrix of samples.
         `thresh` : float
             The maximum filtration radius for Vietoris-Rips persistent homology.
-        `distance_mat` : bool, default False
-            Whether `X` is a distance matrix or not.
 
         Returns
         -------
@@ -331,7 +349,7 @@ class diagram_bootstrap:
             raise Exception('X must be a numpy array.')
         if len(X.shape) != 2 or X.shape[0] < 2 or X.shape[1] < 1:
             raise Exception('X must be a 2-dimensional array with at least two rows and one column.')
-        if distance_mat and X.shape[0] != X.shape[1]:
+        if self.distance_mat and X.shape[0] != X.shape[1]:
             raise Exception('When distance_mat is True X must have the same number of rows and columns (as a distance matrix).')
         if not (isinstance(thresh, type(1)) or isinstance(thresh, type(0.1))):
             raise Exception('thresh must be a number.')
@@ -355,8 +373,8 @@ class diagram_bootstrap:
             s = choices(population = range(len(X)), k = len(X))
             s = list(set(s))
             # subset X
-            if distance_mat:
-                X_sample = X[s, s]
+            if self.distance_mat:
+                X_sample = X[s,:][:,s]
             else:
                 X_sample = X[s, :]
             # compute new persistence diagram

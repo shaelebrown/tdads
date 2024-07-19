@@ -1490,13 +1490,13 @@ testing = ["docopt", "pytest"]
 
 [[package]]
 name = "persim"
-version = "0.3.5"
+version = "0.3.7"
 description = "Distances and representations of persistence diagrams"
 optional = false
-python-versions = ">=3.6"
+python-versions = "*"
 files = [
-    {file = "persim-0.3.5-py3-none-any.whl", hash = "sha256:adc4ee21738f35feee857883c43314935962da365c7ee1c3212016fc2e87ede3"},
-    {file = "persim-0.3.5.tar.gz", hash = "sha256:ab2972de4231f4743bcc34f449f525b2a646aa26dd5ec7d6d5d2fd1cda506498"},
+    {file = "persim-0.3.7-py3-none-any.whl", hash = "sha256:45460a45a3169cd48c0a14be8b01182ddffc64cbbc835c4d40950eb88964580f"},
+    {file = "persim-0.3.7.tar.gz", hash = "sha256:76f7298fb7a46cdbec736f854977f1e1796ddf2d6974eda7d859ca2847f4df64"},
 ]
 
 [package.dependencies]
@@ -1506,10 +1506,9 @@ joblib = "*"
 matplotlib = "*"
 numpy = "*"
 scikit-learn = "*"
-scipy = "*"
 
 [package.extras]
-docs = ["sktda-docs-config"]
+docs = ["ripser", "sktda-docs-config"]
 testing = ["pytest", "pytest-cov"]
 
 [[package]]
@@ -2277,13 +2276,13 @@ files = [
 
 [[package]]
 name = "sphinx"
-version = "7.4.4"
+version = "7.4.6"
 description = "Python documentation generator"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "sphinx-7.4.4-py3-none-any.whl", hash = "sha256:0b800d06701329cba601a40ab8c3d5afd8f7e3518f688dda61fd670effc327d2"},
-    {file = "sphinx-7.4.4.tar.gz", hash = "sha256:43c911f997a4530b6cffd4ff8d5516591f6c60d178591f4406f0dd02282e3f64"},
+    {file = "sphinx-7.4.6-py3-none-any.whl", hash = "sha256:915760d6188288a1e30c2cd0d9fa31b1b009bc6e6019cc0c32d16c77d20e86d9"},
+    {file = "sphinx-7.4.6.tar.gz", hash = "sha256:116918d455c493fff3178edea12b4fe1c1e4894680fd81e7b7431ea21d47ca52"},
 ]
 
 [package.dependencies]
@@ -2773,4 +2772,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "41b1a15ea2d65f0e51aeccab273d93f32b4b2b4ab17997e0ab12d8ddfbb6bb8e"
+content-hash = "57a3b0a0125fe3923dfbace470e6836b19b8e3207f7cb5ba5fbad3a851ab1f0a"

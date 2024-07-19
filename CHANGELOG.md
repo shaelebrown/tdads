@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.2 (19/07/2024)
+
+- Fixed distance matrix functionality in `diagram_bootstrap`
+
 ## v0.1.1 (16/07/2024)
 
 - Fixed scikit-learn dependency
