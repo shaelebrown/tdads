@@ -2,7 +2,7 @@
 from tdads.PH_utils import *
 import pytest
 from numpy import array
-from numpy.random import random, uniform
+from numpy.random import uniform
 from math import pi, cos, sin
 from scipy.spatial.distance import cdist
 
