@@ -235,6 +235,7 @@ class diagram_bootstrap:
         >>> from tdads.inference import diagram_bootstrap
         >>> from ripser import ripser
         >>> from numpy.random import uniform
+        >>> from numpy import array, cos, sin
         >>> # build circle dataset
         >>> theta = uniform(low = 0, high = 2*pi, size = 100)
         >>> data = array([[cos(theta[i]), sin(theta[i])] for i in range(100)])
