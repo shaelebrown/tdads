@@ -399,11 +399,14 @@ class diagram_bootstrap:
         return ret
 
 class universal_null:
-    def __init__(self, dims:list = [1], distance_mat:bool = False, alpha:float = 0.05, infinite_cycle_inference:bool = False):
+    def __init__(self, diag_fun, dims:list = [1], distance_mat:bool = False, alpha:float = 0.05, infinite_cycle_inference:bool = False):
         '''A universal null distribution for (the topological features in) persistence diagrams.
         
         Parameters
         ----------
+        `diag_fun` : function of one variable `X`
+            The persistent homology algorithm (Vietoris Rips) for the dataset `X`.
+            The maximum homological dimension should be the same as the maximum value of `dims`.
         `dims` : list of int, default [1]
             The list of homological dimensions in which to compute confidence sets.
         `distance_mat` : bool, default False
@@ -416,6 +419,8 @@ class universal_null:
 
         Attributes
         ----------
+        `diag_fun` : function
+            The input `diag_fun` parameter.
         `dims` : list
             The input `dims` parameter.
         `distance_mat` : bool, default False
@@ -428,13 +433,26 @@ class universal_null:
         Examples
         --------
         >>> from tdads.inference import universal_null
+        >>> from tdads.PH_utils import enclosing_radius
+        >>> from ripser import ripser
+        >>> # define the persistent homology function
+        >>> def diag_fun(X):
+        >>>     return ripser(X = X, thresh = enclosing_radius(X))
         >>> # create universal null object
-        >>> univ_null = universal_null()
+        >>> univ_null = universal_null(diag_fun = diag_fun)
         
         Citations
         ---------
         Bobrowski O, Skraba P (2023). "A universal null-distribution for topological data analysis." https://www.nature.com/articles/s41598-023-37842-2.
         '''
+        # 
+        def check_fun(a):
+            return 1
+        if not isinstance(diag_fun, type(check_fun)):
+            raise Exception('diag_fun must be a function.')
+        if getfullargspec(diag_fun)[0] != ['X']:
+            raise Exception('diag_fun must be a function of one parameters, X.')
+
         if not isinstance(dims, type([0,1])):
             raise Exception('dims must be a list.')
         if set([type(d) for d in dims]) != set([type(1)]):
@@ -452,6 +470,29 @@ class universal_null:
         if alpha <= 0 or alpha >= 1:
             raise Exception('alpha must be between 0 and 1 (non-inclusive).')
         self.alpha = alpha
+
+        # DO CHECKS PROPERLY FOR NEW DIAG_FUN!!!
+        diamond = array([[0,0],[1,1],[-1,1],[0,2]])
+        dist_diamond = array([[0, sqrt(2), sqrt(2), 2], [sqrt(2), 0, 2, sqrt(2)], [sqrt(2), 2, 0, sqrt(2)], [2, sqrt(2), sqrt(2), 0]])
+        diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]),array([[sqrt(2), 2]])]
+        diamond_diag = [diamond_diag[x] if x < len(diamond_diag) else array([]).reshape(0,2).astype(float64) for x in self.dims]
+        if not distance_mat:
+            X = diamond
+        else:
+            X = dist_diamond
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                sample_res = diag_fun(X, float('inf'))
+            sample_res = preprocess_diagram(sample_res, ret = True)
+        except Exception as ex:
+            raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
+        for i in self.dims:
+            try:
+                assert_almost_equal(sample_res[i], diamond_diag[self.dims.index(i)], 7)
+            except:
+                raise Exception('diag_fun doesn\'t seem to be computing persistence diagrams correctly.')
+        self.diag_fun = diag_fun
 
         if isinstance(infinite_cycle_inference, type(True)) == False:
             raise Exception('infinite_cycle_inference must be True or False.')
@@ -476,5 +517,45 @@ class universal_null:
         else:
             ici_str = 'no '
         s = f'Universal null procedure for {dim_str}, {distmat_str} input, a Type 1 error rate of {str(self.alpha)} and {ici_str}infinite cycle inference.'
-        return s     
+        return s
+    def compute(self, X:ndarray):
+        '''Carry out the universal null inference procedure.
+        
+        Parameters
+        ----------
+        `X` : numpy.ndarray
+            The input dataset - either raw tabular data or a distance matrix of samples.
+
+        Returns
+        -------
+        Dict
+            The entries are 'subsetted_diagram' - the list of subsetted persistence diagrams in each dimension (numpy ndarrays),
+            and 'p_values' - a list of lists for the p-values of each remaining topological feature.
+
+        Examples
+        --------
+        >>> from tdads.inference import universal_null
+        >>> from ripser import ripser
+        >>> from numpy.random import uniform, normal
+        >>> # build circle dataset and add noise
+        >>> theta = uniform(low = 0, high = 2*pi, size = 100)
+        >>> data = array([[cos(theta[i]), sin(theta[i])] for i in range(100)])
+        >>> data = data + normal(scale = 0.2, size = (100, 2))
+        >>> # define the persistent homology function
+        >>> def diag_fun(X, thresh):
+        >>>     return ripser(X = X, thresh = thresh)
+        >>> # create universal null object
+        >>> univ_null = universal_null(diag_fun = diag_fun)
+        >>> # carry out the inference procedure
+        >>> res = univ_null.compute(data)
+        
+        Citations
+        ---------
+        Bobrowski O, Skraba P (2023). "A universal null-distribution for topological data analysis." https://www.nature.com/articles/s41598-023-37842-2.
+        '''
+        # check and reformat the input diagram
+        D = preprocess_diagram(D, ret = True)    
+        # check if there is any work to be done
+        if len(D) > 1:
+            1
     
