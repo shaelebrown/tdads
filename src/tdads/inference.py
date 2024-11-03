@@ -306,7 +306,7 @@ class diagram_bootstrap:
         dms = ''
         if not self.distance_mat:
             dms = 'non-'
-        s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples, ' + '' +  'distance-matrix input, and a Type 1 error of ' + str(self.alpha) + '.'
+        s = 'Bootstrap confidence intervals with ' + str(self.num_samples) + ' many samples, ' + '' +  f'{dms}distance-matrix input, and a Type 1 error of ' + str(self.alpha) + '.'
         return s
     def compute(self, X:ndarray, thresh:float):
         '''Carry out the bootstrap procedure.
@@ -398,5 +398,83 @@ class diagram_bootstrap:
         ret = {'diagram':diagram, 'thresholds':thresholds, 'subsetted_diagram':subsetted_diagram}
         return ret
 
+class universal_null:
+    def __init__(self, dims:list = [1], distance_mat:bool = False, alpha:float = 0.05, infinite_cycle_inference:bool = False):
+        '''A universal null distribution for (the topological features in) persistence diagrams.
         
+        Parameters
+        ----------
+        `dims` : list of int, default [1]
+            The list of homological dimensions in which to compute confidence sets.
+        `distance_mat` : bool, default False
+            Whether the input dataset will be a distance matrix or not.
+        `alpha` : float, default 0.05
+            The type 1 error for determining significant topological features with the
+            Bonferroni correction.
+        `infinite_cycle_inference` : bool, default `FALSE`
+            Whether or not to perform inference for features with infinite death values. 
+
+        Attributes
+        ----------
+        `dims` : list
+            The input `dims` parameter.
+        `distance_mat` : bool, default False
+            The input `distance_mat` parameter.
+        `alpha` : float
+            The input `alpha` parameter.
+        `infinite_cycle_inference` : bool
+            The input `infinite_cycle_inference` parameter.
+
+        Examples
+        --------
+        >>> from tdads.inference import universal_null
+        >>> # create universal null object
+        >>> univ_null = universal_null()
+        
+        Citations
+        ---------
+        Bobrowski O, Skraba P (2023). "A universal null-distribution for topological data analysis." https://www.nature.com/articles/s41598-023-37842-2.
+        '''
+        if not isinstance(dims, type([0,1])):
+            raise Exception('dims must be a list.')
+        if set([type(d) for d in dims]) != set([type(1)]):
+            raise Exception('Each dimension in dims must be an integer.')
+        if min(dims) < 1:
+            raise Exception('Each dimension in dims must be at least 1.')
+        self.dims = dims
+
+        if isinstance(distance_mat, type(True)) == False:
+            raise Exception('distance_mat must be True or False.')
+        self.distance_mat = distance_mat
+
+        if not isinstance(alpha,type(0.05)):
+            raise Exception('alpha must be a float.')
+        if alpha <= 0 or alpha >= 1:
+            raise Exception('alpha must be between 0 and 1 (non-inclusive).')
+        self.alpha = alpha
+
+        if isinstance(infinite_cycle_inference, type(True)) == False:
+            raise Exception('infinite_cycle_inference must be True or False.')
+        self.infinite_cycle_inference = infinite_cycle_inference
+    def __str__(self):
+        '''Describe a universal null procedure based on the dimensions being analyzed,
+        whether or not the input will be a distance matrix, the Type 1 error rate (alpha) and
+        whether or not infinite cycle inference will be carried out.'''
+        dms = ''
+        if not self.distance_mat:
+            dms = 'non-'
+        if len(self.dims) == 1:
+            dim_str = 'dimension ' + str(self.dims[0])
+        else:
+            dim_str = ', '.join([str(d) for d in self.dims[::-1]]) + ' and ' + str(self.dims[-1])
+        if self.distance_mat:
+            distmat_str = 'distance-matrix'
+        else:
+            distmat_str = 'point-cloud'
+        if self.infinite_cycle_inference:
+            ici_str = ''
+        else:
+            ici_str = 'no '
+        s = f'Universal null procedure for {dim_str}, {distmat_str} input, a Type 1 error rate of {str(self.alpha)} and {ici_str}infinite cycle inference.'
+        return s     
     
