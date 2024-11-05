@@ -1,12 +1,14 @@
 
 # inference with persistence diagrams
 from tdads.distance import *
+from tdads.PH_utils import enclosing_radius
 from multiprocessing import cpu_count, Pool
-from numpy import ones, ndarray, percentile, array, float64, equal
+from numpy import ones, ndarray, percentile, array, float64, log, exp, Inf, where
 from numpy.testing import assert_almost_equal
 from itertools import repeat, combinations
 from random import sample, choices
 from inspect import getfullargspec
+from scipy.special import digamma
 import warnings
 
 # permutation test
@@ -404,9 +406,10 @@ class universal_null:
         
         Parameters
         ----------
-        `diag_fun` : function of one variable `X`
-            The persistent homology algorithm (Vietoris Rips) for the dataset `X`.
-            The maximum homological dimension should be the same as the maximum value of `dims`.
+        `diag_fun` : function of two variables, `X` and `thresh`
+            The persistent homology algorithm (Vietoris Rips) for the dataset `X` up to 
+            radius `thresh`. The maximum homological dimension should be the same as the
+            maximum value of `dims`.
         `dims` : list of int, default [1]
             The list of homological dimensions in which to compute confidence sets.
         `distance_mat` : bool, default False
@@ -445,7 +448,6 @@ class universal_null:
         ---------
         Bobrowski O, Skraba P (2023). "A universal null-distribution for topological data analysis." https://www.nature.com/articles/s41598-023-37842-2.
         '''
-        # 
         def check_fun(a):
             return 1
         if not isinstance(diag_fun, type(check_fun)):
@@ -471,7 +473,6 @@ class universal_null:
             raise Exception('alpha must be between 0 and 1 (non-inclusive).')
         self.alpha = alpha
 
-        # DO CHECKS PROPERLY FOR NEW DIAG_FUN!!!
         diamond = array([[0,0],[1,1],[-1,1],[0,2]])
         dist_diamond = array([[0, sqrt(2), sqrt(2), 2], [sqrt(2), 0, 2, sqrt(2)], [sqrt(2), 2, 0, sqrt(2)], [2, sqrt(2), sqrt(2), 0]])
         diamond_diag = [array([[0, sqrt(2)],[0, sqrt(2)],[0, sqrt(2)],[0, float('inf')]]),array([[sqrt(2), 2]])]
@@ -518,13 +519,17 @@ class universal_null:
             ici_str = 'no '
         s = f'Universal null procedure for {dim_str}, {distmat_str} input, a Type 1 error rate of {str(self.alpha)} and {ici_str}infinite cycle inference.'
         return s
-    def compute(self, X:ndarray):
+    def compute(self, X:ndarray, thresh):
         '''Carry out the universal null inference procedure.
         
         Parameters
         ----------
         `X` : numpy.ndarray
             The input dataset - either raw tabular data or a distance matrix of samples.
+        `thresh` : float or 'enclosing'
+            The maximum filtration radius for persistent homology. If 'enclosing' then the
+            enclosing radius of `X` will be computed and used, otherwise `thresh` must be a
+            set number.
 
         Returns
         -------
@@ -553,9 +558,57 @@ class universal_null:
         ---------
         Bobrowski O, Skraba P (2023). "A universal null-distribution for topological data analysis." https://www.nature.com/articles/s41598-023-37842-2.
         '''
-        # check and reformat the input diagram
-        D = preprocess_diagram(D, ret = True)    
+        # check X and thresh parameters
+        if not isinstance(X, type(array([0,1]))):
+            raise Exception('X must be a numpy array.')
+        if len(X.shape) != 2 or X.shape[0] < 2 or X.shape[1] < 1:
+            raise Exception('X must be a 2-dimensional array with at least two rows and one column.')
+        if self.distance_mat and X.shape[0] != X.shape[1]:
+            raise Exception('When distance_mat is True X must have the same number of rows and columns (as a distance matrix).')
+        if not (isinstance(thresh, type(1)) or isinstance(thresh, type(0.1)) or thresh == 'enclosing'):
+            raise Exception('thresh must be a number or the string \"enclosing\".')
+        if thresh != 'enclosing':
+            if thresh <= 0:
+                raise Exception('thresh must be positive.')
+        else:
+            # compute the enclosing radius
+            thresh = enclosing_radius(X)
+        # try to calculate the full persistence diagram
+        try:
+            diagram = self.diag_fun(X, thresh)
+        except Exception as ex:
+            raise Exception('An error occured when diag_fun tried to compute the persistence diagram of X. The error was: ' + str(ex))
+        # error check the persistence diagram
+        try:
+            diagram = preprocess_diagram(D = diagram, ret = True)
+        except Exception as ex:
+            raise Exception('The output of diagam_fun(X, thresh) was not in the correct format for a persistence diagram.')
+        # set up return dict
+        ret = {}
         # check if there is any work to be done
-        if len(D) > 1:
-            1
+        if len(diagram) > 1:
+            # subset for diagrams above dimension 0
+            diag_highdim = diagram[1::]
+            # compute test statistics and p-values
+            A = 1 # for VR persistent homology
+            lambd = -1*digamma(1)
+            pi = [diag_sub[:,1]/diag_sub[:,0] for diag_sub in diagram] # ratio of death to birth
+            loglog_pi = [log(log(pi_sub)) for pi_sub in pi]
+            Lbar = [loglog_pi_sub.mean() for loglog_pi_sub in loglog_pi]
+            B = -1*lambd - A*Lbar
+            test_statistics = [A*loglog_pi[i] - B[i] for i in range(len(loglog_pi))]
+            p_values = [exp(-1*exp(test_statistics_sub)) for test_statistics_sub in test_statistics]
+            # determine Bonferroni thresholds in each dimension
+            alpha_thresh = [self.alpha/len(diag_sub) if len(diag_sub) > 0 else Inf for diag_sub in diag_highdim]
+            # subset the diagram
+            subsetted_diagram = [[diag_highdim[i][j,:] for j in range(len(diag_highdim[i])) if p_values[i][j] < alpha_thresh[i]] for i in range(len(diag_highdim))]
+            # perform infinite cycle inference if desired
+            if self.infinite_cycle_inference:
+                diag_infinite = [where(diag_highdim[i][:,1] == thresh and p_values[i][j] >= alpha_thresh[i]) for i in range(len(diag_highdim)) for j in range(len(diag_highdim[i]))]
+        else:
+            subsetted_diagram = [empty(shape = (0,2)) for _ in range(len(diagram))]
+            p_values = [[] for _ in range(len(diagram))]
+        ret['subsetted_diagram'] = subsetted_diagram
+        ret['p_values'] = p_values
+        return ret
     
