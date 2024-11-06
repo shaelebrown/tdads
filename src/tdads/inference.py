@@ -452,8 +452,8 @@ class universal_null:
             return 1
         if not isinstance(diag_fun, type(check_fun)):
             raise Exception('diag_fun must be a function.')
-        if getfullargspec(diag_fun)[0] != ['X']:
-            raise Exception('diag_fun must be a function of one parameters, X.')
+        if getfullargspec(diag_fun)[0] != ['X', 'thresh']:
+            raise Exception('diag_fun must be a function of two parameters, X and thresh.')
 
         if not isinstance(dims, type([0,1])):
             raise Exception('dims must be a list.')

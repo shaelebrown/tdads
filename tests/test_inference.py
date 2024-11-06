@@ -124,4 +124,53 @@ def test_diagram_bootstrap():
     assert len(res['subsetted_diagram'][2]) == 1
     # add test for distance matrix ripser!!
     
-    
+def test_universal_null_constructor():
+    with pytest.raises(Exception, match = 'diag_fun'):
+        un = universal_null(diag_fun = 1)
+    def f():
+        1
+    with pytest.raises(Exception, match = 'X and thresh'):
+        un = universal_null(diag_fun = f)
+    def f(X, thresh):
+        1
+    with pytest.raises(Exception, match = 'computing'):
+        un = universal_null(diag_fun = f)
+    def f(X, thresh):
+        return ripser(X = X, thresh = thresh, maxdim = 1)
+    with pytest.raises(Exception, match = 'alpha'):
+        un = universal_null(diag_fun = f, alpha = '0.05')
+    with pytest.raises(Exception, match = 'distance_mat'):
+        un = universal_null(diag_fun = f, distance_mat = 'False')
+    with pytest.raises(Exception, match = 'computing'):
+        un = universal_null(diag_fun = f, distance_mat = True)
+    with pytest.raises(Exception, match = 'infinite_cycle_inference'):
+        un = universal_null(diag_fun = f, infinite_cycle_inference = 1)
+    with pytest.raises(Exception, match = 'dims'):
+        un = universal_null(diag_fun = f, dims = '[0,1]')
+    with pytest.raises(Exception, match = 'at least 1'):
+        un = universal_null(diag_fun = f, dims = [0])
+
+def test_universal_null():
+    def f(X, thresh):
+        return ripser(X = X, thresh = thresh, maxdim = 1)
+    un = universal_null(diag_fun = f)
+    un_dist = universal_null(diag_fun = f, distance_mat=True)
+    with pytest.raises(Exception, match = 'numpy'):
+        res = un.compute(X = 1,thresh = 0)
+    with pytest.raises(Exception, match = '2-dimensional'):
+        res = un.compute(X = array([0,1]),thresh = 0)
+    with pytest.raises(Exception, match = 'distance'):
+        res = un_dist.compute(X = array([0,1]),thresh = 0)
+    with pytest.raises(Exception, match = 'enclosing'):
+        res = un_dist.compute(X = array([[0,1],[1,2]]),thresh = 'Enc')
+    with pytest.raises(Exception, match = 'positive'):
+        res = un_dist.compute(X = array([[0,1],[1,2]]),thresh = 0)
+    theta = uniform(low = 0, high = 2*pi, size = 100)
+    data = array([[cos(theta[i]), sin(theta[i])] for i in range(100)])
+    data_dist = cdist(data, data, metric = 'euclidean')
+    res1 = un.compute(data, thresh = 2)
+    res2 = un.compute(data, thresh = 'enclosing')
+    res3 = un_dist.compute(data_dist, thresh = 'enclosing')
+    assert res1['subsetted_diagram'][0].shape[0] == 0
+    assert res2['subsetted_diagram'][0].shape[0] == 0
+    assert res3['subsetted_diagram'][0].shape[0] == 0
