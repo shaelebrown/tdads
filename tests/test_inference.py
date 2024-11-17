@@ -3,7 +3,7 @@ from tdads.inference import *
 from tdads.distance import distance
 import pytest
 from numpy import array
-from numpy.random import random, uniform
+from numpy.random import random, uniform, normal
 from ripser import ripser
 from math import pi, cos, sin
 from scipy.spatial.distance import cdist
@@ -153,13 +153,15 @@ def test_universal_null_constructor():
 def test_universal_null():
     def f(X, thresh):
         return ripser(X = X, thresh = thresh, maxdim = 1)
+    def f_dist(X, thresh):
+        return ripser(X = X, thresh = thresh, maxdim = 1, distance_matrix=True)
     un = universal_null(diag_fun = f)
-    un_dist = universal_null(diag_fun = f, distance_mat=True)
+    un_dist = universal_null(diag_fun = f_dist, distance_mat=True)
     with pytest.raises(Exception, match = 'numpy'):
         res = un.compute(X = 1,thresh = 0)
     with pytest.raises(Exception, match = '2-dimensional'):
         res = un.compute(X = array([0,1]),thresh = 0)
-    with pytest.raises(Exception, match = 'distance'):
+    with pytest.raises(Exception, match = '2-dimensional'):
         res = un_dist.compute(X = array([0,1]),thresh = 0)
     with pytest.raises(Exception, match = 'enclosing'):
         res = un_dist.compute(X = array([[0,1],[1,2]]),thresh = 'Enc')
@@ -174,3 +176,12 @@ def test_universal_null():
     assert res1['subsetted_diagram'][0].shape[0] == 0
     assert res2['subsetted_diagram'][0].shape[0] == 0
     assert res3['subsetted_diagram'][0].shape[0] == 0
+    # adding noise
+    data = data + normal(loc = 0, scale = 0.1, size = (100, 2))
+    data_dist = cdist(data, data, metric = 'euclidean')
+    res1 = un.compute(data, thresh = 2)
+    res2 = un.compute(data, thresh = 'enclosing')
+    res3 = un_dist.compute(data_dist, thresh = 'enclosing')
+    assert res1['subsetted_diagram'][0].shape[0] == 1
+    assert res2['subsetted_diagram'][0].shape[0] == 1
+    assert res3['subsetted_diagram'][0].shape[0] == 1

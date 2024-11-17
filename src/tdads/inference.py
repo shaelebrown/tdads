@@ -3,7 +3,7 @@
 from tdads.distance import *
 from tdads.PH_utils import enclosing_radius
 from multiprocessing import cpu_count, Pool
-from numpy import ones, ndarray, percentile, array, float64, log, exp, Inf, where
+from numpy import ones, ndarray, percentile, array, float64, log, exp, Inf, where, concatenate, reshape
 from numpy.testing import assert_almost_equal
 from itertools import repeat, combinations
 from random import sample, choices
@@ -592,16 +592,17 @@ class universal_null:
             # compute test statistics and p-values
             A = 1 # for VR persistent homology
             lambd = -1*digamma(1)
-            pi = [diag_sub[:,1]/diag_sub[:,0] for diag_sub in diagram] # ratio of death to birth
+            pi = [diag_sub[:,1]/diag_sub[:,0] for diag_sub in diag_highdim] # ratio of death to birth
             loglog_pi = [log(log(pi_sub)) for pi_sub in pi]
             Lbar = [loglog_pi_sub.mean() for loglog_pi_sub in loglog_pi]
             B = -1*lambd - A*Lbar
-            test_statistics = [A*loglog_pi[i] - B[i] for i in range(len(loglog_pi))]
+            test_statistics = [A*loglog_pi[i] + B[i] for i in range(len(loglog_pi))]
             p_values = [exp(-1*exp(test_statistics_sub)) for test_statistics_sub in test_statistics]
             # determine Bonferroni thresholds in each dimension
             alpha_thresh = [self.alpha/len(diag_sub) if len(diag_sub) > 0 else Inf for diag_sub in diag_highdim]
-            # subset the diagram
-            subsetted_diagram = [[diag_highdim[i][j,:] for j in range(len(diag_highdim[i])) if p_values[i][j] < alpha_thresh[i]] for i in range(len(diag_highdim))]
+            # subset the diagram and p-values
+            subsetted_diagram = [concatenate([reshape(diag_highdim[i][j,:], (1,2)) if p_values[i][j] < alpha_thresh[i] else empty(shape=(0, 2)) for j in range(len(diag_highdim[i]))], axis=0) for i in range(len(diag_highdim))]
+            p_values = [array([p_values[i][x] for x in where(p_values[i] < alpha_thresh[i])]) for i in range(len(diag_highdim))]
             # perform infinite cycle inference if desired
             if self.infinite_cycle_inference:
                 diag_infinite = [where(diag_highdim[i][:,1] == thresh and p_values[i][j] >= alpha_thresh[i]) for i in range(len(diag_highdim)) for j in range(len(diag_highdim[i]))]
