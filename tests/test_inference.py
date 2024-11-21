@@ -157,6 +157,7 @@ def test_universal_null():
         return ripser(X = X, thresh = thresh, maxdim = 1, distance_matrix=True)
     un = universal_null(diag_fun = f)
     un_dist = universal_null(diag_fun = f_dist, distance_mat=True)
+    un_inf = universal_null(diag_fun = f, infinite_cycle_inference=True)
     with pytest.raises(Exception, match = 'numpy'):
         res = un.compute(X = 1,thresh = 0)
     with pytest.raises(Exception, match = '2-dimensional'):
@@ -185,3 +186,8 @@ def test_universal_null():
     assert res1['subsetted_diagram'][0].shape[0] == 1
     assert res2['subsetted_diagram'][0].shape[0] == 1
     assert res3['subsetted_diagram'][0].shape[0] == 1
+    # now with and without infinite cycle inference
+    res4 = un.compute(data, thresh = 1.1)
+    assert res4['subsetted_diagram'][0].shape[0] == 0 # failing?
+    res5 = un_inf.compute(data, thresh = 1.1)
+    assert res5['subsetted_diagram'][0].shape[0] == 1
