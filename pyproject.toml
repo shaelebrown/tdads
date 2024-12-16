@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tdads"
-version = "0.1.2"
+version = "0.1.3"
 description = "Data science for topological data analysis"
 authors = ["Shael Brown"]
 license = "GNU General Public License v3.0"

@@ -21,7 +21,7 @@ $ pip install tdads
     into a low dimensional space (i.e. dimension reduction). 
 2.  Statistics. The `permutation_test` class can carry out ANOVA-like tests
     for identifying group differences of persistence diagrams. 
-    The `diagram_bootstrap` class can be used to identify 
+    The `universal_null` and `diagram_bootstrap` classes can be used to identify 
     statistically significant topological features in a dataset.
 
 ## Usage
