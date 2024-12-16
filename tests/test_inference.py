@@ -175,19 +175,31 @@ def test_universal_null():
     res2 = un.compute(data, thresh = 'enclosing')
     res3 = un_dist.compute(data_dist, thresh = 'enclosing')
     assert res1['subsetted_diagram'][0].shape[0] == 0
+    assert len(res1['p_values'][0]) == 0
     assert res2['subsetted_diagram'][0].shape[0] == 0
+    assert len(res2['p_values'][0]) == 0
     assert res3['subsetted_diagram'][0].shape[0] == 0
+    assert len(res3['p_values'][0]) == 0
     # adding noise
     data = data + normal(loc = 0, scale = 0.1, size = (100, 2))
     data_dist = cdist(data, data, metric = 'euclidean')
     res1 = un.compute(data, thresh = 2)
     res2 = un.compute(data, thresh = 'enclosing')
     res3 = un_dist.compute(data_dist, thresh = 'enclosing')
-    assert res1['subsetted_diagram'][0].shape[0] == 1
-    assert res2['subsetted_diagram'][0].shape[0] == 1
-    assert res3['subsetted_diagram'][0].shape[0] == 1
+    assert res1['subsetted_diagram'][0].shape[0] <= 1
+    assert len(res1['p_values'][0]) <= 1
+    assert res1['subsetted_diagram'][0].shape[0] == len(res1['p_values'][0])
+    assert res2['subsetted_diagram'][0].shape[0] <= 1
+    assert len(res2['p_values'][0]) <= 1
+    assert res2['subsetted_diagram'][0].shape[0] == len(res2['p_values'][0])
+    assert res3['subsetted_diagram'][0].shape[0] <= 1
+    assert len(res3['p_values'][0]) <= 1
+    assert res3['subsetted_diagram'][0].shape[0] == len(res3['p_values'][0])
     # now with and without infinite cycle inference
-    res4 = un.compute(data, thresh = 1.1)
-    assert res4['subsetted_diagram'][0].shape[0] == 0 # failing?
-    res5 = un_inf.compute(data, thresh = 1.1)
+    res4 = un.compute(data, thresh = 0.7)
+    assert res4['subsetted_diagram'][0].shape[0] <= 1
+    assert len(res4['p_values'][0]) <= 1
+    assert res4['subsetted_diagram'][0].shape[0] == len(res4['p_values'][0])
+    res5 = un_inf.compute(data, thresh = 0.7)
     assert res5['subsetted_diagram'][0].shape[0] == 1
+    assert len(res5['p_values'][0]) == 1

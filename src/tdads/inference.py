@@ -3,7 +3,7 @@
 from tdads.distance import *
 from tdads.PH_utils import enclosing_radius
 from multiprocessing import cpu_count, Pool
-from numpy import ones, ndarray, percentile, array, float64, log, exp, Inf, where, concatenate, reshape, delete, inf
+from numpy import ones, ndarray, percentile, array, float64, log, exp, Inf, where, concatenate, reshape, delete, inf, intersect1d
 from numpy.testing import assert_almost_equal
 from itertools import repeat, combinations
 from random import sample, choices
@@ -608,34 +608,40 @@ class universal_null:
             subsetted_diagram = [where(d == thresh,concatenate([reshape(d[:,0], (len(d), 1)), reshape(array([inf for _ in range(len(d))]), (len(d), 1))], axis = 1),d) for d in subsetted_diagram]
             # perform infinite cycle inference if desired
             if self.infinite_cycle_inference:
-                infinite_inds = [where((diag_highdim[i][:,1] == thresh)*(p_values[i] >= alpha_thresh[i])) for i in range(len(diag_highdim))]
+                infinite_inds = [where((diag_highdim[i][:,1] == thresh)*(p_values[i] >= alpha_thresh[i]))[0] for i in range(len(diag_highdim))]
                 # subset p-values
                 p_values = [array([p_values[i][x] for x in where(p_values[i] < alpha_thresh[i])]) for i in range(len(diag_highdim))]
-                if sum([len(x[0]) for x in infinite_inds]) > 0:
-                    infinite_cycle_inference = [[] for _ in range(len(infinite_inds))]
+                if sum([len(x) for x in infinite_inds]) > 0:
+                    infinite_cycle_inference = [empty(shape = (0,2)) for _ in range(len(infinite_inds))]
                     diag_infinite = [diag_highdim[i][infinite_inds[i],:] for i in range(len(infinite_inds))]
                     alpha_cutoffs = [exp(exp((log(log(1/alpha_thresh[i])) - B[i])/A)) for i in range(len(alpha_thresh))]
-                    while sum([len(x) for x in infinite_inds]) > 0:
+                    while sum([len(x) for x in diag_infinite]) > 0:
                         # get minimum birth value of any point
                         min_birth_vals = [min(d[:,0]) for d in diag_infinite]
                         min_birth_val = min(min_birth_vals)
                         min_birth_dim = min_birth_vals.index(min_birth_val)
                         min_birth_ind = where(diag_infinite[min_birth_dim][:,0] == min_birth_val)[0].item()
                         pt = diag_infinite[min_birth_dim][min_birth_ind]
-                        diag_infinite[min_birth_dim] = delete(diag_infinite[min_birth_dim],[min_birth_ind])
+                        diag_infinite[min_birth_dim] = delete(diag_infinite[min_birth_dim],min_birth_ind, axis = 0)
                         # compute new death value
-                        new_death = alpha_cutoffs[min_birth_dim]*pt[0,1].item()
+                        new_death = alpha_cutoffs[min_birth_dim]*pt[0]
                         # calculate new diagram
                         new_diag = self.diag_fun(X = X, thresh = new_death)
+                        new_diag = preprocess_diagram(new_diag, ret = True)
+                        new_diag = new_diag[1::]
                         # check if the point is still there
-                        if len(where(new_diag[min_birth_dim + 1][:,0] == pt[0] and new_diag[min_birth_dim + 1][:,1] == new_death)):
+                        if len(intersect1d(where(new_diag[min_birth_dim][:,0] == pt[0]), where(new_diag[min_birth_dim][:,1] == inf))) > 0:
+                            pt[1] = inf
+                            pt = reshape(pt, (1,2))
                             infinite_cycle_inference[min_birth_dim] = concatenate([infinite_cycle_inference[min_birth_dim], pt])
                     # update results
                     subsetted_diagram = [concatenate([subsetted_diagram[i], infinite_cycle_inference[i]]) for i in range(len(infinite_cycle_inference))]
-                    p_values = [p_values[i] + [None for _ in range(len(infinite_cycle_inference[i]))] for i in range(infinite_cycle_inference)]
+                    p_values = [p_values[i] + [None for _ in range(len(infinite_cycle_inference[i]))] for i in range(len(infinite_cycle_inference))]
                 else:
                     # subset p-values
-                    p_values = [array([p_values[i][x] for x in where(p_values[i] < alpha_thresh[i])]) for i in range(len(diag_highdim))]
+                    p_values = [array([p_values[i][x] for x in where(p_values[i] < alpha_thresh[i])[0]]) for i in range(len(diag_highdim))]
+            else:
+                p_values = [array([p_values[i][x] for x in where(p_values[i] < alpha_thresh[i])[0]]) for i in range(len(diag_highdim))]
         else:
             subsetted_diagram = [empty(shape = (0,2)) for _ in range(len(diagram))]
             p_values = [[] for _ in range(len(diagram))]
